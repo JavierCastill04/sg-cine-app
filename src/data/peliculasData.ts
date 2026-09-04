@@ -1,0 +1,43 @@
+import { Pelicula } from "../types/Pelicula";
+export const peliculasData: Pelicula[] = [
+    {
+        id: 1,
+        codigo: "PEL-001",
+        nombre: "Superman",
+        genero: "Acción",
+        duracion: 129,
+        clasificacion: "12+",
+        precio: 6.5,
+        disponible: true,
+    },
+    {
+        id: 2,
+        codigo: "PEL-002",
+        nombre: "Intensamente 2",
+        genero: "Animación",
+        duracion: 96,
+        clasificacion: "Todo público",
+        precio: 5.5,
+        disponible: true,
+    },
+    {
+        id: 3,
+        codigo: "PEL-003",
+        nombre: "Minecraft",
+        genero: "Aventura",
+        duracion: 101,
+        clasificacion: "12+",
+        precio: 6,
+        disponible: false,
+    },
+    {
+        id: 4,
+        codigo: "PEL-004",
+        nombre: "Avatar: El Camino del Agua",
+        genero: "Ciencia Ficción",
+        duracion: 192,
+        clasificacion: "15+",
+        precio: 7.5,
+        disponible: true,
+    },
+];
