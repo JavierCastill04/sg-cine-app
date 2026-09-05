@@ -6,7 +6,7 @@ import { generarAsientos } from "../../components/asientos/asientosUtils";
 
 
 const initialState: Sala[] = salasData.map((sala) => ({
-    ...sala, asiento: generarAsientos(
+    ...sala, asientos: generarAsientos(
         sala.id,
         sala.capacidad.filas,
         sala.capacidad.columnas
@@ -18,62 +18,59 @@ const salaSlice = createSlice({
     initialState,
     reducers: {
         addSala: (state, action: PayloadAction<Omit<Sala, 'id' | 'asientos'>>) => {
-            const nuevoId = state.length > 0 ? Math.max(...state.map(s => s.id)) + 1 : 1;
-            const salaExistente = state.find(
-                sala => sala.nombre === action.payload.nombre
-            );
+            const nuevoId =
+                state.length > 0
+                    ? Math.max(...state.map(sala => sala.id)) + 1
+                    : 1;
 
-            if (salaExistente) {
-                //Notificar al usuario directamente, hacer luego.
-                console.log(`La ${action.payload.nombre} ya existe. No se puede agregar.`);
-
-            } else {
-                state.push({
-                    id: nuevoId,
-                    ...action.payload,
-                    asientos: generarAsientos(nuevoId, action.payload.capacidad.filas, action.payload.capacidad.columnas)
-                });
-            }
+            state.push({
+                id: nuevoId,
+                ...action.payload,
+                asientos: generarAsientos(
+                    nuevoId,
+                    action.payload.capacidad.filas,
+                    action.payload.capacidad.columnas
+                ),
+            });
         },
 
         updateSala: (state, action: PayloadAction<Sala>) => {
-            const salaId = state.findIndex(sala => sala.id === action.payload.id);
-            if (salaId !== -1) {
-                const salaActual = state[salaId];
+            const indice = state.findIndex(
+                sala => sala.id === action.payload.id
+            );
 
-                const capacidadNueva = action.payload.capacidad;
-                //Evaluar si cambian las dimensiones
-                if (salaActual.capacidad.filas !== capacidadNueva.filas || salaActual.capacidad.columnas !== capacidadNueva.columnas) {
-                    {
-                        state[salaId] = {
-                            ...action.payload,
-                            asientos: generarAsientos(action.payload.id, capacidadNueva.filas, capacidadNueva.columnas)
-                        };
-                    }
-                }
-                else {
-                    state[salaId] = {
-                        ...state[salaId],
-                        ...action.payload
-                    };
-                }
+            if (indice === -1) {
+                return;
             }
-            else {
-                //Notificar al usuario directamente, hacer luego.
-                console.log(`No se encuentra la sala indicada`);
-            }
+
+            const salaActual = state[indice];
+            const capacidadNueva = action.payload.capacidad;
+
+            const cambioDimensiones =
+                salaActual.capacidad.filas !== capacidadNueva.filas ||
+                salaActual.capacidad.columnas !== capacidadNueva.columnas;
+
+            state[indice] = {
+                ...action.payload,
+                asientos: cambioDimensiones
+                    ? generarAsientos(
+                        action.payload.id,
+                        capacidadNueva.filas,
+                        capacidadNueva.columnas
+                    )
+                    : salaActual.asientos,
+            };
         },
 
         removeSala: (state, action: PayloadAction<number>) => {
-            const salaId = state.findIndex(sala => sala.id === action.payload);
-            if (salaId !== -1) {
-                state.splice(salaId, 1);
+            const indice = state.findIndex(
+                sala => sala.id === action.payload
+            );
+
+            if (indice !== -1) {
+                state.splice(indice, 1);
             }
-            else {
-                //Notificar al usuario directamente, hacer luego.
-                console.log(`La sala no se pudo eliminar.`);
-            }
-        }
+        },
     }
 });
 

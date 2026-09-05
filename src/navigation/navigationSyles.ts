@@ -3,10 +3,10 @@ import { colores } from '../theme';
 
 export const tabScreenOptions: BottomTabNavigationOptions = {
     headerStyle: {
-        backgroundColor: colores.primario,
+        backgroundColor: colores.secundario,
     },
 
-    headerTintColor: colores.superficie,
+    headerTintColor: colores.enfasis,
 
     headerTitleStyle: {
         fontWeight: '700',
@@ -17,7 +17,8 @@ export const tabScreenOptions: BottomTabNavigationOptions = {
 
     tabBarStyle: {
         backgroundColor: colores.secundario,
-        borderTopWidth: 0,
+        borderTopWidth: 5,
+        borderColor: colores.secundario
     },
 
     tabBarLabelStyle: {
