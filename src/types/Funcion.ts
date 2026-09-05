@@ -5,6 +5,5 @@ export interface Funcion {
     salaId: number;
     fecha: string;
     horaInicio: string;
-    precio: number;
     estadoAsientos: EstadoAsiento[];
 }
