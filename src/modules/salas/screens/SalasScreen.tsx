@@ -1,13 +1,16 @@
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, View } from 'react-native';
+import { View, Text } from 'react-native';
+
+import { useAppSelector } from '../../../redux/hooks';
+import { commonStyles } from '../../../theme';
+import SalaList from '../components/SalasList';
 
 export default function SalasScreen() {
-    return (
-        <SafeAreaView>
-            <View>
-                <Text>Estás en Salas</Text>
-            </View>
-        </SafeAreaView>
 
+    const salas = useAppSelector(state => state.sala);
+
+    return (
+        <View style={commonStyles.containerScreen}>
+            <SalaList salas={salas} />
+        </View>
     );
 }

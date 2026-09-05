@@ -7,10 +7,13 @@ import { layout } from './layout';
 
 export const commonStyles = StyleSheet.create({
 
-    container: {
+    containerScreen: {
         flex: 1,
         backgroundColor: colores.fondo,
-        padding: espaciado.xxl,
+        paddingLeft: espaciado.xl,
+        paddingRight: espaciado.xl,
+        paddingTop: espaciado.md,
+        paddingBottom: espaciado.md,
     },
 
     surface: {
@@ -38,7 +41,7 @@ export const commonStyles = StyleSheet.create({
 
     text: {
         ...tipografia.body,
-        color: colores.texto,
+        color: colores.superficie,
     },
 
     secondaryText: {
@@ -61,6 +64,22 @@ export const commonStyles = StyleSheet.create({
         color: colores.primario,
     },
 
+    cardButton: {
+        flex: 1,
+        backgroundColor: colores.enfasis,
+        borderRadius: layout.radius,
+        paddingVertical: espaciado.sm,
+        paddingHorizontal: espaciado.md,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    cardButtonContainter: {
+        flexDirection: 'row',
+        gap: espaciado.sm,
+        paddingTop: espaciado.xl
+    },
+
     input: {
         borderWidth: 1,
         borderColor: colores.borde,
@@ -69,6 +88,21 @@ export const commonStyles = StyleSheet.create({
         paddingHorizontal: espaciado.lg,
         backgroundColor: colores.superficie,
         color: colores.texto,
+    },
+
+    card: {
+        backgroundColor: colores.secundario,
+        padding: espaciado.xl,
+        marginBottom: espaciado.md,
+        borderWidth: 1,
+        borderRadius: layout.radius,
+        borderColor: colores.enfasis,
+    },
+
+    cardTitle: {
+        ...tipografia.heading,
+        color: colores.enfasis,
+        marginBottom: espaciado.sm,
     },
 
 });
