@@ -3,7 +3,7 @@ import { colores } from '../theme';
 
 export const tabScreenOptions: BottomTabNavigationOptions = {
     headerStyle: {
-        backgroundColor: colores.primario,
+        backgroundColor: colores.secundario,
     },
 
     headerTintColor: colores.enfasis,
