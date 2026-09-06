@@ -4,10 +4,11 @@ import CarteleraCard from "../components/CarteleraCard";
 
 interface CarteleraListProps {
     peliculas: Pelicula[],
+    onVerFunciones:(pelicula:Pelicula) => void;
 }
 
 
-export default function CarteleraList({ peliculas }: CarteleraListProps) {
+export default function CarteleraList({ peliculas, onVerFunciones }: CarteleraListProps) {
     return (
         <FlatList
             data={peliculas}
@@ -15,6 +16,7 @@ export default function CarteleraList({ peliculas }: CarteleraListProps) {
             renderItem={({ item }) => (
                 <CarteleraCard
                     pelicula={item}
+                    onVerFunciones={onVerFunciones}
                 />
             )
             }

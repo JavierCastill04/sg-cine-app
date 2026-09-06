@@ -4,6 +4,7 @@ import { View, Text } from 'react-native';
 import { Pelicula } from '../../../types/Pelicula';
 import CarteleraList from '../components/CarteleraList';
 import CarteleraSlider from '../components/CarteleraSlider';
+import CarteleraModal from "../components/CarteleraModal";
 import { commonStyles } from '../../../theme';
 
 export default function CarteleraScreen() {
@@ -22,6 +23,9 @@ export default function CarteleraScreen() {
     const abrirFunciones = (pelicula: Pelicula) => {
         setPeliculaSeleccionada(pelicula);
     };
+    const cerrarFunciones = () => {
+        setPeliculaSeleccionada(null);
+    };
 
     return (
         <View style={commonStyles.containerScreen}>
@@ -31,20 +35,17 @@ export default function CarteleraScreen() {
                 onVerFunciones={abrirFunciones}
             />
             <Text style={[commonStyles.subtitle, { marginBottom: 20 }]}>
-                Cartelera semanal
+                Cartelera
             </Text>
             <CarteleraList
                 peliculas={peliculasDisponibles}
+                onVerFunciones={abrirFunciones}
             />
-            { /*
-            <SalaModal
-                visible={modalVisible}
-                sala={salaSeleccionada}
-                salas={salas}
-                onClose={cerrarModal}
-                onGuardar={guardarSala}
+            <CarteleraModal
+                visible={peliculaSeleccionada !== null}
+                pelicula={peliculaSeleccionada}
+                onClose={cerrarFunciones}
             />
-            */}
         </View>
     );
 }

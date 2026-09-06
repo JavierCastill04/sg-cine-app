@@ -4,9 +4,10 @@ import { colores, commonStyles } from "../../../theme";
 
 interface CarteleraCardProps {
     pelicula: Pelicula,
+    onVerFunciones: (pelicula: Pelicula) => void;
 }
 
-export default function CarteleraCard({ pelicula }: CarteleraCardProps) {
+export default function CarteleraCard({ pelicula, onVerFunciones }: CarteleraCardProps) {
     return (
         <View style={[commonStyles.card, styles.card]}>
             <Text style={[commonStyles.cardTitle, styles.titulo]}>
@@ -29,7 +30,7 @@ export default function CarteleraCard({ pelicula }: CarteleraCardProps) {
 
             <View style={styles.separador} />
 
-            <TouchableOpacity style={styles.boton}>
+            <TouchableOpacity style={styles.boton} onPress={() => onVerFunciones(pelicula)}>
                 <Text style={styles.botonTexto}>
                     Ver funciones
                 </Text>
