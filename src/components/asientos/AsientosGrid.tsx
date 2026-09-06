@@ -9,13 +9,12 @@ interface SeatGridProps {
     estadoAsientos?: EstadoAsiento[];
     seleccionados?: string[];
     onSeleccionar?: (asiento: string) => void;
+    mostrarSeleccionados?: boolean;
 }
 
 export default function AsientosGrid({
-    filas, columnas, salaId, estadoAsientos = [], seleccionados = [], onSeleccionar
-}: SeatGridProps) {
+    filas, columnas, salaId, estadoAsientos = [], seleccionados = [], onSeleccionar, mostrarSeleccionados = false }: SeatGridProps) {
     const asientos = generarAsientos(salaId ?? 0, filas, columnas);
-
     return (
         <AsientosSecciones
             asientos={asientos}
@@ -23,6 +22,7 @@ export default function AsientosGrid({
             estadoAsientos={estadoAsientos}
             seleccionados={seleccionados}
             onSeleccionar={onSeleccionar}
+            mostrarSeleccionados={mostrarSeleccionados}
         />
     );
 }

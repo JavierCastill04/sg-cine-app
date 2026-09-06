@@ -12,6 +12,12 @@ interface Props {
     onSeleccionar: (id: string) => void;
 }
 
+const mostrarAsiento = (id: string) => {
+    const partes = id.split("-");
+
+    return `${partes[1]}${partes[2]}`;
+};
+
 export default function PasoAsientos({
     sala,
     funcion,
@@ -19,6 +25,7 @@ export default function PasoAsientos({
     total,
     onSeleccionar
 }: Props) {
+
     return (
         <>
             <Text style={commonStyles.subtitle}>
@@ -32,12 +39,17 @@ export default function PasoAsientos({
                 estadoAsientos={funcion.estadoAsientos}
                 seleccionados={seleccionados}
                 onSeleccionar={onSeleccionar}
+                mostrarSeleccionados
             />
 
-            <View style={[commonStyles.card, {marginTop:20}]}>
+            <View style={[commonStyles.card, { marginTop: 20 }]}>
                 <Text style={commonStyles.cardTitle}>Resumen</Text>
+                <Text style={commonStyles.secondaryText}>Boletos: {seleccionados.length}</Text>
                 <Text style={commonStyles.secondaryText}>
-                    Boletos: {seleccionados.length}
+                    Asientos:{" "}
+                    {seleccionados.length > 0
+                        ? seleccionados.map(mostrarAsiento).join(", ")
+                        : "Ninguno"}
                 </Text>
                 <Text style={{ color: colores.enfasis, fontSize: 18, fontWeight: "700" }}>
                     Total: ${total.toFixed(2)}
