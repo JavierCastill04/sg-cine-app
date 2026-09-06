@@ -40,7 +40,7 @@ export default function FuncionDetalleModal({
                         </View>
 
                         <TouchableOpacity onPress={onClose}>
-                            <X size={24} color={colores.texto} />
+                            <X size={32} color={colores.enfasis} />
                         </TouchableOpacity>
                     </View>
 
