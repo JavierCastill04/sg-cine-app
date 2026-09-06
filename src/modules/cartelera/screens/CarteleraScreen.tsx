@@ -10,7 +10,9 @@ export default function CarteleraScreen() {
     const [peliculaSeleccionada, setPeliculaSeleccionada] = useState<Pelicula | null>(null);
     const peliculas = useAppSelector(state => state.pelicula);
     const funciones = useAppSelector(state => state.funcion);
-    const peliculasDisponibles = peliculas.filter(peliculas => peliculas.disponible === true);
+    const peliculasDisponibles = peliculas.filter(
+        (pelicula) => pelicula.disponible === true && funciones.some((funcion) => funcion.peliculaId === pelicula.id)
+    );
     const peliculasDestacadas = peliculas.filter((pelicula) => {
         const numFunciones = funciones.filter
             ((funcion) => funcion.peliculaId === pelicula.id).length;
@@ -25,7 +27,7 @@ export default function CarteleraScreen() {
         <View style={commonStyles.containerScreen}>
 
             <CarteleraSlider
-                peliculasDestacadas={peliculasDisponibles}
+                peliculasDestacadas={peliculasDestacadas}
                 onVerFunciones={abrirFunciones}
             />
             <Text style={[commonStyles.subtitle, { marginBottom: 20 }]}>
