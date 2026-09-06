@@ -9,10 +9,12 @@ const peliculaSlice = createSlice({
     name: "pelicula",
     initialState,
     reducers: {
+        // Agregar película
         addPelicula: (state, action: PayloadAction<Pelicula>) => {
             state.push(action.payload);
         },
 
+        // Actualizar película
         updatePelicula: (state, action: PayloadAction<Pelicula>) => {
             const indice = state.findIndex(
                 (pelicula) => pelicula.id === action.payload.id,
@@ -23,6 +25,7 @@ const peliculaSlice = createSlice({
             }
         },
 
+        // Eliminar película
         removePelicula: (state, action: PayloadAction<number>) => {
             const indice = state.findIndex(
                 (pelicula) => pelicula.id === action.payload,
