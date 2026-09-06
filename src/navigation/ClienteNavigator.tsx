@@ -25,7 +25,8 @@ export default function ClienteNavigator() {
                         default:
                             return null;
                     }
-                }
+                },
+                animation:'fade'
             })}
         >
             <Tab.Screen name="Cartelera" component={Cartelera} />
