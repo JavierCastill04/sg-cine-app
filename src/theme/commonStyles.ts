@@ -30,9 +30,9 @@ export const commonStyles = StyleSheet.create({
     subtitle: {
         ...tipografia.subtitle,
         color: colores.superficie,
-        marginTop:espaciado.xl,
+        marginTop: espaciado.xl,
         marginBottom: espaciado.md,
-        textAlign:"center",
+        textAlign: "center",
     },
 
     heading: {
@@ -64,7 +64,7 @@ export const commonStyles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '700',
         color: colores.primario,
-        textAlign:'center',
+        textAlign: 'center',
     },
 
     cardButton: {
@@ -102,9 +102,10 @@ export const commonStyles = StyleSheet.create({
         backgroundColor: colores.secundario,
         padding: espaciado.xl,
         marginBottom: espaciado.md,
-        borderWidth: 1,
         borderRadius: layout.radius,
         borderColor: colores.enfasis,
+        borderLeftWidth: 4,
+        borderLeftColor: colores.enfasis,
     },
 
     cardTitle: {
