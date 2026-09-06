@@ -18,5 +18,6 @@ export const colores = {
     negro: '#000000',
     rojo: '#de0000',
     oliva: '#636b2f',
-    darkOliva:'#272b00'
+    darkOliva: '#272b00',
+    verde: '#22c55e',
 };

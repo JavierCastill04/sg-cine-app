@@ -140,7 +140,7 @@ export default function SalaFormModal({ visible, sala, salas, onClose, onGuardar
 
                         <TouchableOpacity style={commonStyles.modalButton} onPress={guardar}>
                             <Text style={commonStyles.buttonText}>
-                                {esEdicion ? 'Guardar' : 'Crear sala'}
+                                {esEdicion ? 'Guardar' : 'Crear'}
                             </Text>
                         </TouchableOpacity>
                     </View>
