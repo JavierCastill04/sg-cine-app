@@ -3,7 +3,7 @@ export type RootStackParamList = {
     Login: undefined;
     ClienteNavigator: undefined;
     PersonalNavigator: undefined;
-    Reserva: undefined; 
+    Reserva: { funcionId: number };
 };
 
 export type ClienteTabParamList = {
