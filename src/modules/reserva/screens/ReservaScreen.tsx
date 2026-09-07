@@ -12,23 +12,14 @@ import PasoFuncion from "../components/PasoFuncion";
 import PasoAsientos from "../components/PasoAsientos";
 import PasoCliente from "../components/PasoCliente";
 import PasoConfirmacion from "../components/PasoConfirmacion";
+import type { Cliente } from "../../../types/Cliente";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { validarCampo, type CampoCliente } from "../validarCliente";
+import { validarCampo } from "../validarCliente";
+import * as Crypto from "expo-crypto";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-interface Cliente {
-    nombre: string;
-    correo: string;
-    telefono: string;
-}
-
-const pasos = [
-    "Función",
-    "Asientos",
-    "Datos",
-    "Confirmar"
-];
+const pasos = ["Función", "Asientos", "Datos", "Confirmar"];
 
 export default function ReservaScreen({ route }: any) {
     const navigation = useNavigation<NavigationProp>();
@@ -83,7 +74,6 @@ export default function ReservaScreen({ route }: any) {
             };
             return Object.values(errores).every(error => error === "");
         }
-
         return paso < 4;
     };
 
@@ -110,7 +100,6 @@ export default function ReservaScreen({ route }: any) {
                 setPaso(actual => actual - 1);
                 return true;
             }
-
             navigation.pop();
             return true;
         };
