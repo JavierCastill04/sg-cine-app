@@ -49,7 +49,7 @@ export default function GeneradorQR({
 
     return (
         <View style={commonStyles.containerScreen}>
-            <Text style={[commonStyles.subtitle, {color: colores.enfasis}]}>
+            <Text style={[commonStyles.subtitle, { color: colores.enfasis }]}>
                 ¡Compra realizada!
             </Text>
 
@@ -63,11 +63,12 @@ export default function GeneradorQR({
 
             <View
                 style={{
-                    alignItems: "center",
+                    alignSelf: "center",
                     marginVertical: 25,
-                    marginHorizontal:25,
-                    padding: 20,
-                    backgroundColor: "#FFFFFF",
+                    padding: 15,
+                    backgroundColor: colores.superficie,
+                    borderWidth: 8,
+                    borderColor: colores.negro,
                     borderRadius: 16
                 }}
             >
@@ -87,7 +88,7 @@ export default function GeneradorQR({
             <TouchableOpacity style={commonStyles.button} onPress={onEnviar}>
                 <Text style={commonStyles.buttonText}>Enviar boleto al correo</Text>
             </TouchableOpacity>
-            <View style={{marginVertical:10}} />
+            <View style={{ marginVertical: 10 }} />
             <TouchableOpacity style={commonStyles.button} onPress={onSalir}>
                 <Text style={commonStyles.buttonText}>Salir</Text>
             </TouchableOpacity>

@@ -13,35 +13,18 @@ import CarteleraModal from "../components/CarteleraModal";
 import { commonStyles } from "../../../theme";
 
 export default function CarteleraScreen() {
-    const [peliculaSeleccionada, setPeliculaSeleccionada] =
-        useState<Pelicula | null>(null);
-
+    const [peliculaSeleccionada, setPeliculaSeleccionada] = useState<Pelicula | null>(null);
     const [busqueda, setBusqueda] = useState("");
     const [generoSeleccionado, setGeneroSeleccionado] = useState("");
-    const [clasificacionSeleccionada, setClasificacionSeleccionada] =
-        useState("");
-    const [salaSeleccionada, setSalaSeleccionada] =
-        useState<number | null>(null);
-
-    const [estadoSeleccionado, setEstadoSeleccionado] = useState<
-        "todos" | "disponible" | "noDisponible"
-    >("disponible");
-
+    const [clasificacionSeleccionada, setClasificacionSeleccionada] = useState("");
+    const [salaSeleccionada, setSalaSeleccionada] = useState<number | null>(null);
+    const [estadoSeleccionado, setEstadoSeleccionado] = useState<"todos" | "disponible" | "noDisponible">("disponible");
     const peliculas = useAppSelector((state) => state.pelicula);
     const funciones = useAppSelector((state) => state.funcion);
     const salas = useAppSelector((state) => state.sala);
-
-    const peliculasConFunciones = peliculas.filter((pelicula) =>
-        funciones.some(
-            (funcion) => funcion.peliculaId === pelicula.id
-        )
-    );
-
+    const peliculasConFunciones = peliculas.filter((pelicula) => funciones.some((funcion) => funcion.peliculaId === pelicula.id));
     const peliculasDestacadas = peliculas.filter((pelicula) => {
-        const numFunciones = funciones.filter(
-            (funcion) => funcion.peliculaId === pelicula.id
-        ).length;
-
+        const numFunciones = funciones.filter((funcion) => funcion.peliculaId === pelicula.id).length;
         return numFunciones > 3;
     });
 
@@ -91,7 +74,7 @@ export default function CarteleraScreen() {
             const coincideClasificacion =
                 clasificacionSeleccionada === "" ||
                 pelicula.clasificacion ===
-                    clasificacionSeleccionada;
+                clasificacionSeleccionada;
 
             const coincideSala =
                 salaSeleccionada === null ||
