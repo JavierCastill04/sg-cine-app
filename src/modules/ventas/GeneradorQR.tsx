@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react";
 import { BackHandler, Text, TouchableOpacity, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
-import { commonStyles } from "../../theme";
+import { colores, commonStyles } from "../../theme";
 
 interface Props {
     token: string;
     onGenerado: (qr: string) => void;
+    onEnviar: () => void;
     onSalir: () => void;
 }
 
@@ -16,6 +17,7 @@ interface QRCodeRef {
 export default function GeneradorQR({
     token,
     onGenerado,
+    onEnviar,
     onSalir
 }: Props) {
     const qrRef = useRef<QRCodeRef | null>(null);
@@ -47,7 +49,7 @@ export default function GeneradorQR({
 
     return (
         <View style={commonStyles.containerScreen}>
-            <Text style={commonStyles.title}>
+            <Text style={[commonStyles.subtitle, {color: colores.enfasis}]}>
                 ¡Compra realizada!
             </Text>
 
@@ -63,6 +65,7 @@ export default function GeneradorQR({
                 style={{
                     alignItems: "center",
                     marginVertical: 25,
+                    marginHorizontal:25,
                     padding: 20,
                     backgroundColor: "#FFFFFF",
                     borderRadius: 16
@@ -79,14 +82,14 @@ export default function GeneradorQR({
 
             <Text
                 style={[commonStyles.text, { textAlign: "center", marginBottom: 20 }]}>
-                También enviamos tu boleto al correo electrónico
-                proporcionado.
+                ¡Presiona para enviar el boleto al correo que proporcionaste!
             </Text>
-
+            <TouchableOpacity style={commonStyles.button} onPress={onEnviar}>
+                <Text style={commonStyles.buttonText}>Enviar boleto al correo</Text>
+            </TouchableOpacity>
+            <View style={{marginVertical:10}} />
             <TouchableOpacity style={commonStyles.button} onPress={onSalir}>
-                <Text style={commonStyles.buttonText}>
-                    Salir
-                </Text>
+                <Text style={commonStyles.buttonText}>Salir</Text>
             </TouchableOpacity>
         </View>
     );

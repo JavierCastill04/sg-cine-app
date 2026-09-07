@@ -25,6 +25,7 @@ export default function ReservaScreen({ route }: any) {
     const [tokenQR, setTokenQR] = useState("");
     const [comprando, setComprando] = useState(false);
     const [venta, setVenta] = useState<Venta | null>(null);
+    const [pdfUri, setPdfUri] = useState<string | null>(null);
     const [seleccionados, setSeleccionados] = useState<string[]>([]);
     const [cliente, setCliente] = useState<Cliente>({ nombre: "", correo: "", telefono: "" });
     const funcion = useAppSelector(state => state.funcion.find(f => f.id === funcionId));
@@ -174,18 +175,43 @@ export default function ReservaScreen({ route }: any) {
                             token={venta.token}
                             onGenerado={async qr => {
                                 try {
-                                    const pdfUri = await generarBoleto({
+                                    const uri = await generarBoleto({
                                         venta,
                                         pelicula,
                                         sala,
                                         funcion,
                                         qr
                                     });
-                                    await enviarBoleto(venta, pdfUri);
+
+                                    setPdfUri(uri);
+
                                 } catch (error) {
                                     Alert.alert(
                                         "Error",
-                                        "No se pudo generar o enviar el boleto."
+                                        "No se pudo generar el boleto."
+                                    );
+                                }
+                            }}
+                            onEnviar={async () => {
+                                if (!pdfUri) {
+                                    Alert.alert(
+                                        "Error",
+                                        "El boleto todavía no está listo."
+                                    );
+                                    return;
+                                }
+
+                                try {
+                                    await enviarBoleto(venta, pdfUri);
+
+                                    Alert.alert(
+                                        "Boleto enviado",
+                                        `El boleto fue enviado a ${venta.cliente.correo}.`
+                                    );
+                                } catch (error) {
+                                    Alert.alert(
+                                        "Error",
+                                        "No se pudo enviar el boleto."
                                     );
                                 }
                             }}

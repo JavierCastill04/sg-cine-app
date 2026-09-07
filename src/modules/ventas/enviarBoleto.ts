@@ -21,7 +21,8 @@ export const enviarBoleto = async (
 
         Tu compra se realizó correctamente.
 
-        Adjuntamos tu boleto de cine con el código QR. Preséntalo en la entrada para acceder a tu función.
+        Adjuntamos tu boleto de cine con el código QR. 
+        Preséntalo en la entrada para acceder a tu función.
 
         ¡Gracias por comprar con Cine App!`,
         attachments: [pdfUri]
