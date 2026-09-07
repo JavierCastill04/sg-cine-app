@@ -117,13 +117,13 @@ export default function PersonalNavigator() {
                         default: return null;
                     }
                 },
-                animation: 'shift'
+                animation: 'none'
             })}
         >
             <Tab.Screen name="Peliculas" component={Peliculas} options={{ headerTitle: 'Gestión de Películas' }} />
             <Tab.Screen name="Salas" component={Salas} options={{ headerTitle: 'Gestión de Salas' }} />
-            <Tab.Screen name="Dashboard" component={Dashboard} options={{ headerTitle: 'Dashboard y estadísticas' }} />
             <Tab.Screen name="Funciones" component={Funciones} options={{ headerTitle: 'Gestión de Funciones' }} />
+            <Tab.Screen name="Dashboard" component={Dashboard} options={{ headerTitle: 'Dashboard y estadísticas' }} />
             <Tab.Screen name="Escaner" component={Escaner} options={{ headerTitle: 'Validación de boletos' }} />
         </Tab.Navigator>
     );

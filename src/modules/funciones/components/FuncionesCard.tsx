@@ -58,7 +58,7 @@ export default function FuncionesCard({
                     <SquarePen size={22} />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={commonStyles.cardButton} onPress={() => onEliminar(funcion)}>
+                <TouchableOpacity style={[commonStyles.cardButton, { backgroundColor: colores.rojo }]} onPress={() => onEliminar(funcion)}>
                     <Trash size={22} />
                 </TouchableOpacity>
             </View>
