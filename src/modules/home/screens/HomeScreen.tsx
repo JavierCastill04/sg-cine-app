@@ -113,7 +113,7 @@ export default function HomeScreen({ navigation }: Props) {
 
             {/* Acceso oculto para personal */}
             <TouchableOpacity
-                onPress={() => navigation.navigate('Login')}
+                onPress={() => navigation.navigate('Private')}
                 style={{
                     position: 'absolute',
                     bottom: 15,
