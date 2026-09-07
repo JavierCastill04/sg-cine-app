@@ -11,13 +11,13 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
     return (
-        <Stack.Navigator initialRouteName="Home" screenOptions={{ animation: 'fade' }}>
-            <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="ClienteNavigator" component={ClienteNavigator} options={{ headerShown: false }} />
-            <Stack.Screen name="PersonalNavigator" component={PersonalNavigator} options={{ headerShown: false }} />
-            <Stack.Screen name="Private" component={PrivateScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="Reserva" component={ReservaScreen} options={{ headerShown: false, animation: "none" }} />
+        <Stack.Navigator initialRouteName="Home" screenOptions={{ animation: 'none' }}>
+            <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false, animation: 'none' }} />
+            <Stack.Screen name="ClienteNavigator" component={ClienteNavigator} options={{ headerShown: false, animation: 'none' }} />
+            <Stack.Screen name="PersonalNavigator" component={PersonalNavigator} options={{ headerShown: false, animation: 'none' }} />
+            <Stack.Screen name="Private" component={PrivateScreen} options={{ headerShown: false, animation: 'none' }} />
+            <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false, animation: 'none' }} />
+            <Stack.Screen name="Reserva" component={ReservaScreen} options={{ headerShown: false, animation: "none", presentation: "card" }} />
         </Stack.Navigator>
     );
 }

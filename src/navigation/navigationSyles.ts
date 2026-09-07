@@ -5,7 +5,7 @@ export const tabScreenOptions: BottomTabNavigationOptions = {
     headerStyle: {
         backgroundColor: colores.secundario,
     },
-
+    
     headerTintColor: colores.enfasis,
 
     headerTitleStyle: {
@@ -18,7 +18,7 @@ export const tabScreenOptions: BottomTabNavigationOptions = {
     tabBarStyle: {
         backgroundColor: colores.secundario,
         borderTopWidth: 5,
-        borderColor: colores.secundario
+        borderColor: colores.secundario,
     },
 
     tabBarLabelStyle: {
