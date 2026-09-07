@@ -1,97 +1,129 @@
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { useState } from "react";
+import { Text, TextInput, TouchableOpacity, View, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { LogIn, ShieldCheck } from "lucide-react-native";
+import type { RootStackParamList } from "../../../navigation/types";
+import { colores, commonStyles } from "../../../theme";
+import { useAppSelector, useAppDispatch } from "../../../redux/hooks";
+import { login } from "../../../redux/slices/authSlice";
+import { usuariosData } from "../../../data/usuariosData";
+import { Fingerprint } from "lucide-react-native";
+import { autenticarBiometria } from "../../auth/utils/biometria";
+import Toast from "react-native-toast-message";
 
-import { RootStackParamList } from '../../../navigation/types';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-
-import { commonStyles, colores } from '../../../theme';
-import { ShieldCheck } from 'lucide-react-native';
-
-type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
+type Props = NativeStackScreenProps<RootStackParamList, "Login">;
 
 export default function LoginScreen({ navigation }: Props) {
+    const dispatch = useAppDispatch();
+    const [usuario, setUsuario] = useState("");
+    const [contraseña, setContraseña] = useState("");
+    const biometriaActiva = useAppSelector(state => state.auth.biometriaActiva);
+    const usuarioBiometria = useAppSelector(state => state.auth.usuarioBiometria);
+
+    const iniciarSesion = () => {
+        const usuarioEncontrado = usuariosData.find(usuarioData => usuarioData.usuario === usuario && usuarioData.contraseña === contraseña);
+
+        if (!usuarioEncontrado) {
+            Toast.show({ type: 'error', text1: 'Error', text2: 'Usuario o contraseña incorrectos', position: 'bottom', visibilityTime: 1500, bottomOffset: 100 });
+            return;
+        }
+
+        const { contraseña: _, ...usuarioSinContraseña } = usuarioEncontrado;
+
+        dispatch(login(usuarioSinContraseña));
+        navigation.replace("PersonalNavigator");
+    };
+
+    const iniciarConBiometria = async () => {
+        if (!usuarioBiometria) {
+            Toast.show({ type: 'error', text1: 'Error', text2: 'No hay usuario configurado para autenticación biométrica', position: 'bottom', visibilityTime: 1500, bottomOffset: 100 });
+            return;
+        }
+
+        const autenticado = await autenticarBiometria();
+
+        if (!autenticado) { return; }
+
+        dispatch(login(usuarioBiometria));
+        navigation.replace("PersonalNavigator");
+    };
+
     return (
         <SafeAreaView style={commonStyles.containerScreen}>
-            <View style={{ flex: 1, justifyContent: 'center' }}>
+            <View style={{ flex: 1, justifyContent: "center" }}>
+                <View style={commonStyles.card}>
+                    <View style={{ alignItems: "center", marginBottom: 30 }}>
+                        <ShieldCheck size={70} color={colores.enfasis} />
 
-                {/* Encabezado */}
-                <View style={{ alignItems: 'center', marginBottom: 40 }}>
-                    <ShieldCheck
-                        size={60}
-                        color={colores.enfasis}
-                    />
+                        <Text
+                            style={[
+                                commonStyles.title,
+                                {
+                                    marginTop: 15,
+                                    marginBottom: 5,
+                                    textAlign: "center"
+                                }
+                            ]}
+                        >
+                            Área personal
+                        </Text>
 
-                    <Text
-                        style={[
-                            commonStyles.title,
-                            {
-                                color: colores.enfasis,
-                                textAlign: 'center',
-                                marginTop: 15,
-                            },
-                        ]}
-                    >
-                        CINE APP
-                    </Text>
+                        <Text style={commonStyles.secondaryText}>Inicia sesión para continuar</Text>
+                    </View>
 
-                    <Text
-                        style={[
-                            commonStyles.subtitle,
-                            {
-                                color: colores.blanco,
-                                textAlign: 'center',
-                                marginTop: 8,
-                            },
-                        ]}
-                    >
-                        Acceso de personal
-                    </Text>
+                    <View style={commonStyles.inputView}>
+                        <Text style={commonStyles.label}>Usuario</Text>
+                        <TextInput
+                            style={commonStyles.input}
+                            placeholder="Ingresa tu usuario"
+                            placeholderTextColor={colores.textoSecundario}
+                            value={usuario}
+                            onChangeText={setUsuario}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
+                    </View>
 
-                    <Text
-                        style={[
-                            commonStyles.secondaryText,
-                            {
-                                textAlign: 'center',
-                                marginTop: 6,
-                            },
-                        ]}
-                    >
-                        Ingresa al área de administración
-                    </Text>
+                    <View style={commonStyles.inputView}>
+                        <Text style={commonStyles.label}>Contraseña</Text>
+                        <TextInput
+                            style={commonStyles.input}
+                            placeholder="Ingresa tu contraseña"
+                            placeholderTextColor={colores.textoSecundario}
+                            value={contraseña}
+                            onChangeText={setContraseña}
+                            secureTextEntry
+                            autoCapitalize="none"
+                        />
+                    </View>
+
+                    <View style={styles.botonesContainer}>
+                        <TouchableOpacity style={[commonStyles.button, { flexDirection: "row" }]} onPress={iniciarSesion}>
+                            <LogIn size={20} />
+                            <Text style={[commonStyles.buttonText, { marginLeft: 8 }]}>Iniciar sesión</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={[commonStyles.button, { backgroundColor: colores.rojo }]} onPress={() => navigation.goBack()} >
+                            <Text style={commonStyles.modalButtonCancelarText}>Volver</Text>
+                        </TouchableOpacity>
+                        {biometriaActiva && (
+                            <TouchableOpacity style={[commonStyles.button, { flexDirection: "row",backgroundColor: colores.verde }]} onPress={iniciarConBiometria} >
+                                <Fingerprint size={20} />
+                                <Text style={[commonStyles.buttonText, { marginLeft: 8 }]}> Entrar con biometría</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
                 </View>
-
-                {/* Botón de acceso */}
-                <TouchableOpacity
-                    style={[
-                        commonStyles.button,
-                        {
-                            backgroundColor: colores.enfasis,
-                            flexDirection: 'row',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                        },
-                    ]}
-                    onPress={() => navigation.navigate('PersonalNavigator')}
-                >
-                    <ShieldCheck
-                        size={22}
-                        color={colores.negro}
-                    />
-
-                    <Text
-                        style={[
-                            commonStyles.buttonText,
-                            {
-                                color: colores.negro,
-                                marginLeft: 10,
-                            },
-                        ]}
-                    >
-                        Entrar a Personal
-                    </Text>
-                </TouchableOpacity>
-
             </View>
         </SafeAreaView>
     );
 }
+
+const styles = StyleSheet.create({
+    botonesContainer: {
+        flexDirection: 'column',
+        marginTop: 20,
+        gap: 10
+    }
+})
