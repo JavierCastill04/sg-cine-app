@@ -86,7 +86,7 @@ export default function DashboardScreen() {
     );
 
     return (
-        <SafeAreaView style={commonStyles.containerScreen}>
+        <View style={commonStyles.containerScreen}>
             <ScrollView showsVerticalScrollIndicator={false}>
 
                 <Text style={commonStyles.subtitle}>
@@ -209,7 +209,7 @@ export default function DashboardScreen() {
                 </View>
 
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 
