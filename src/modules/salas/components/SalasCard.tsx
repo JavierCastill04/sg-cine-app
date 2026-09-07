@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import type { Sala } from '../../../types/Sala';
-import { commonStyles } from '../../../theme';
+import { commonStyles, colores } from '../../../theme';
 import { SquarePen, Trash } from 'lucide-react-native'
 
 interface SalaCardProps {
@@ -26,7 +26,7 @@ export default function SalaCard({ sala, onEditar, onEliminar }: SalaCardProps) 
                 <TouchableOpacity style={commonStyles.cardButton} onPress={() => onEditar(sala)}>
                     <SquarePen></SquarePen>
                 </TouchableOpacity>
-                <TouchableOpacity style={commonStyles.cardButton} onPress={() => onEliminar(sala)}>
+                <TouchableOpacity style={[commonStyles.cardButton, { backgroundColor: colores.rojo }]} onPress={() => onEliminar(sala)}>
                     <Trash></Trash>
                 </TouchableOpacity>
             </View>
