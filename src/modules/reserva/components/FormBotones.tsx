@@ -7,6 +7,7 @@ interface Props {
     onVolver: () => void;
     onContinuar: () => void;
     onConfirmar: () => void;
+    confirmando: boolean;
 }
 
 export default function FormBotones({
@@ -14,7 +15,8 @@ export default function FormBotones({
     puedeContinuar,
     onVolver,
     onContinuar,
-    onConfirmar
+    onConfirmar,
+    confirmando
 }: Props) {
     return (
         <>
@@ -38,8 +40,8 @@ export default function FormBotones({
                 )}
 
                 {paso === 4 && (
-                    <TouchableOpacity style={[commonStyles.button, styles.button]} onPress={onConfirmar}>
-                        <Text style={commonStyles.buttonText}>Confirmar compra</Text>
+                    <TouchableOpacity style={[commonStyles.button, styles.button]} onPress={onConfirmar} disabled={confirmando}>
+                        <Text style={commonStyles.buttonText}>{confirmando ? "Procesando..." : "Confirmar compra"}</Text>
                     </TouchableOpacity>
                 )}
             </View>

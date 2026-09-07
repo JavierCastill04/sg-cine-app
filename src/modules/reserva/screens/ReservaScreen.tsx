@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ScrollView, Text, View, BackHandler } from "react-native";
+import { ScrollView, Text, View, BackHandler, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAppSelector } from "../../../redux/hooks";
@@ -15,7 +15,8 @@ import PasoConfirmacion from "../components/PasoConfirmacion";
 import type { Cliente } from "../../../types/Cliente";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { validarCampo } from "../validarCliente";
-import * as Crypto from "expo-crypto";
+import { useAppDispatch } from "../../../redux/hooks";
+import { registrarVenta } from "../../ventas/registrarVenta";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -25,11 +26,13 @@ export default function ReservaScreen({ route }: any) {
     const navigation = useNavigation<NavigationProp>();
     const { funcionId } = route.params;
     const [paso, setPaso] = useState(1);
+    const [comprando, setComprando] = useState(false);
     const [seleccionados, setSeleccionados] = useState<string[]>([]);
     const [cliente, setCliente] = useState<Cliente>({ nombre: "", correo: "", telefono: "" });
     const funcion = useAppSelector(state => state.funcion.find(f => f.id === funcionId));
     const pelicula = useAppSelector(state => state.pelicula.find(p => p.id === funcion?.peliculaId));
     const sala = useAppSelector(state => state.sala.find(s => s.id === funcion?.salaId));
+    const dispatch = useAppDispatch();
 
     if (!funcion || !pelicula || !sala) {
         return (
@@ -92,6 +95,27 @@ export default function ReservaScreen({ route }: any) {
     };
 
     const confirmarCompra = () => {
+        if (comprando) { return; }
+        setComprando(true);
+
+        const venta = registrarVenta(dispatch, {
+            funcion,
+            pelicula,
+            cliente,
+            asientos: seleccionados,
+            total
+        });
+
+        Alert.alert(
+            "Compra realizada",
+            "Ha realizado su reserva correctamente, revise su correo electrónico",
+            [
+                {
+                    text: "Aceptar",
+                    onPress: () => navigation.pop()
+                }
+            ]
+        );
     };
 
     useEffect(() => {
@@ -163,6 +187,7 @@ export default function ReservaScreen({ route }: any) {
                     onVolver={volver}
                     onContinuar={continuar}
                     onConfirmar={confirmarCompra}
+                    confirmando={comprando}
                 />
             </ScrollView>
         </SafeAreaView>
