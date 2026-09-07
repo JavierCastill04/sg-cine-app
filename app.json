@@ -24,7 +24,10 @@
     "plugins": [
       "@react-native-community/datetimepicker",
       "expo-sharing",
-      "expo-mail-composer"
+      "expo-mail-composer",
+      "expo-audio",
+      "expo-asset",
+      "expo-router"
     ]
   }
 }
