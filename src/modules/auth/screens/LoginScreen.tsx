@@ -1,36 +1,51 @@
 import { useState } from "react";
-import { Alert, Text, TextInput, TouchableOpacity, View, StyleSheet } from "react-native";
+import { Text, TextInput, TouchableOpacity, View, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { LogIn, ShieldCheck } from "lucide-react-native";
 import type { RootStackParamList } from "../../../navigation/types";
 import { colores, commonStyles } from "../../../theme";
-import { useAppDispatch } from "../../../redux/hooks";
+import { useAppSelector, useAppDispatch } from "../../../redux/hooks";
 import { login } from "../../../redux/slices/authSlice";
 import { usuariosData } from "../../../data/usuariosData";
+import { Fingerprint } from "lucide-react-native";
+import { autenticarBiometria } from "../../auth/utils/biometria";
+import Toast from "react-native-toast-message";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Login">;
 
 export default function LoginScreen({ navigation }: Props) {
     const dispatch = useAppDispatch();
-
     const [usuario, setUsuario] = useState("");
     const [contraseña, setContraseña] = useState("");
+    const biometriaActiva = useAppSelector(state => state.auth.biometriaActiva);
+    const usuarioBiometria = useAppSelector(state => state.auth.usuarioBiometria);
 
     const iniciarSesion = () => {
         const usuarioEncontrado = usuariosData.find(usuarioData => usuarioData.usuario === usuario && usuarioData.contraseña === contraseña);
 
         if (!usuarioEncontrado) {
-            Alert.alert(
-                "Error",
-                "El usuario o la contraseña son incorrectos."
-            );
+            Toast.show({ type: 'error', text1: 'Error', text2: 'Usuario o contraseña incorrectos', position: 'bottom', visibilityTime: 1500, bottomOffset: 100 });
             return;
         }
 
         const { contraseña: _, ...usuarioSinContraseña } = usuarioEncontrado;
 
         dispatch(login(usuarioSinContraseña));
+        navigation.replace("PersonalNavigator");
+    };
+
+    const iniciarConBiometria = async () => {
+        if (!usuarioBiometria) {
+            Toast.show({ type: 'error', text1: 'Error', text2: 'No hay usuario configurado para autenticación biométrica', position: 'bottom', visibilityTime: 1500, bottomOffset: 100 });
+            return;
+        }
+
+        const autenticado = await autenticarBiometria();
+
+        if (!autenticado) { return; }
+
+        dispatch(login(usuarioBiometria));
         navigation.replace("PersonalNavigator");
     };
 
@@ -92,6 +107,12 @@ export default function LoginScreen({ navigation }: Props) {
                         <TouchableOpacity style={[commonStyles.button, { backgroundColor: colores.rojo }]} onPress={() => navigation.goBack()} >
                             <Text style={commonStyles.modalButtonCancelarText}>Volver</Text>
                         </TouchableOpacity>
+                        {biometriaActiva && (
+                            <TouchableOpacity style={[commonStyles.button, { flexDirection: "row",backgroundColor: colores.verde }]} onPress={iniciarConBiometria} >
+                                <Fingerprint size={20} />
+                                <Text style={[commonStyles.buttonText, { marginLeft: 8 }]}> Entrar con biometría</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </View>
             </View>

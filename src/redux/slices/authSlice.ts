@@ -6,7 +6,8 @@ import type { AuthState } from "../../types/AuthState";
 const initialState: AuthState = {
     autenticado: false,
     usuario: null,
-    biometriaActiva: false
+    biometriaActiva: false,
+    usuarioBiometria: null
 };
 
 const authSlice = createSlice({
@@ -23,12 +24,14 @@ const authSlice = createSlice({
             state.usuario = null;
         },
 
-        activarBiometria: state => {
+        activarBiometria: (state, action: PayloadAction<Usuario>) => {
             state.biometriaActiva = true;
+            state.usuarioBiometria = action.payload;
         },
 
         desactivarBiometria: state => {
             state.biometriaActiva = false;
+            state.usuarioBiometria = null;
         }
     }
 });

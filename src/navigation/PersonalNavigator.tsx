@@ -14,15 +14,19 @@ import type { PersonalTabParamList, RootStackParamList } from './types';
 import { tabScreenOptions } from './navigationSyles';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { activarBiometria, desactivarBiometria, logout } from '../redux/slices/authSlice';
+import { autenticarBiometria, biometriaDisponible } from '../modules/auth/utils/biometria';
 import { colores } from '../theme';
+
 
 const Tab = createBottomTabNavigator<PersonalTabParamList>();
 
 export default function PersonalNavigator() {
     const dispatch = useAppDispatch();
+    const usuario = useAppSelector(state => state.auth.usuario);
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const autenticado = useAppSelector(state => state.auth.autenticado);
     const biometriaActiva = useAppSelector(state => state.auth.biometriaActiva);
+
 
     useEffect(() => {
         if (!autenticado) { navigation.replace('Login'); }
@@ -30,14 +34,28 @@ export default function PersonalNavigator() {
 
     if (!autenticado) { return null; }
 
-    const configurarBiometria = () => {
+    const configurarBiometria = async () => {
+
+        if (!usuario) { return; }
+        const autenticado = await autenticarBiometria();
+        const disponible = await biometriaDisponible();
         if (biometriaActiva) {
             dispatch(desactivarBiometria());
             Toast.show({ type: 'error', text1: 'Biometría desactivada', position: 'bottom', visibilityTime: 1500, bottomOffset: 100 });
             return;
         }
+        
+        if (!autenticado) {
+            Toast.show({ type: 'error', text1: 'Autenticación fallida', text2: 'No se pudo verificar tu identidad.', position: 'bottom', visibilityTime: 1500, bottomOffset: 100 });
+            return;
+        }
 
-        dispatch(activarBiometria());
+        if (!disponible) {
+            Toast.show({ type: 'error', text1: 'Biometría no disponible', text2: 'Configura un método biométrico en tu dispositivo.', position: 'bottom', visibilityTime: 1500, bottomOffset: 100 });
+            return;
+        }
+
+        dispatch(activarBiometria(usuario));
         Toast.show({ type: 'success', text1: 'Biometría activada', position: 'bottom', visibilityTime: 1500, bottomOffset: 100 });
     };
 
