@@ -5,7 +5,7 @@ import { RootStackParamList } from '../../../navigation/types';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { commonStyles, colores } from '../../../theme';
-import { UserRound, ShieldCheck } from 'lucide-react-native';
+import { UserRound, Popcorn, Film } from 'lucide-react-native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -15,13 +15,24 @@ export default function HomeScreen({ navigation }: Props) {
             <View style={{ flex: 1, justifyContent: 'center' }}>
 
                 {/* Encabezado */}
-                <View style={{ alignItems: 'center', marginBottom: 40 }}>
+                <View
+                    style={{
+                        alignItems: 'center',
+                        marginBottom: 40,
+                    }}
+                >
+                    <Film
+                        size={60}
+                        color={colores.enfasis}
+                    />
+
                     <Text
                         style={[
                             commonStyles.title,
                             {
                                 color: colores.enfasis,
                                 textAlign: 'center',
+                                marginTop: 12,
                             },
                         ]}
                     >
@@ -38,7 +49,7 @@ export default function HomeScreen({ navigation }: Props) {
                             },
                         ]}
                     >
-                        Bienvenido
+                        ¡Bienvenido!
                     </Text>
 
                     <Text
@@ -50,24 +61,26 @@ export default function HomeScreen({ navigation }: Props) {
                             },
                         ]}
                     >
-                        Selecciona una opción para continuar
+                        Disfruta de nuestra cartelera
                     </Text>
                 </View>
 
-                {/* Acceso a Clientes */}
+                {/* Acceso para clientes */}
                 <TouchableOpacity
                     style={[
                         commonStyles.card,
                         {
                             backgroundColor: colores.secundario,
                             alignItems: 'center',
-                            paddingVertical: 25,
+                            paddingVertical: 30,
                         },
                     ]}
-                    onPress={() => navigation.navigate('ClienteNavigator')}
+                    onPress={() =>
+                        navigation.navigate('ClienteNavigator')
+                    }
                 >
                     <UserRound
-                        size={42}
+                        size={48}
                         color={colores.enfasis}
                     />
 
@@ -96,49 +109,25 @@ export default function HomeScreen({ navigation }: Props) {
                     </Text>
                 </TouchableOpacity>
 
-                {/* Acceso a Personal */}
-                <TouchableOpacity
-                    style={[
-                        commonStyles.card,
-                        {
-                            backgroundColor: colores.secundario,
-                            alignItems: 'center',
-                            paddingVertical: 25,
-                        },
-                    ]}
-                    onPress={() => navigation.navigate('Login')}
-                >
-                    <ShieldCheck
-                        size={42}
-                        color={colores.enfasis}
-                    />
-
-                    <Text
-                        style={[
-                            commonStyles.cardTitle,
-                            {
-                                color: colores.blanco,
-                                marginTop: 12,
-                            },
-                        ]}
-                    >
-                        Personal
-                    </Text>
-
-                    <Text
-                        style={[
-                            commonStyles.secondaryText,
-                            {
-                                textAlign: 'center',
-                                marginTop: 5,
-                            },
-                        ]}
-                    >
-                        Acceder a la administración
-                    </Text>
-                </TouchableOpacity>
-
             </View>
+
+            {/* Acceso oculto para personal */}
+            <TouchableOpacity
+                onPress={() => navigation.navigate('Login')}
+                style={{
+                    position: 'absolute',
+                    bottom: 15,
+                    right: 10,
+                    padding: 10,
+                    opacity: 0.35,
+                }}
+            >
+                <Popcorn
+                    size={22}
+                    color={colores.blanco}
+                />
+            </TouchableOpacity>
+
         </SafeAreaView>
     );
 }
