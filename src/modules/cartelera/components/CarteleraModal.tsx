@@ -1,4 +1,7 @@
 import { Modal, View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RootStackParamList } from "../../../navigation/types";
 import { X, CalendarDays, Clock } from "lucide-react-native";
 import { Pelicula } from "../../../types/Pelicula";
 import { colores, commonStyles } from "../../../theme";
@@ -10,12 +13,20 @@ interface FuncionesModalProps {
     onClose: () => void;
 }
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 export default function CarteleraModal({ visible, pelicula, onClose }: FuncionesModalProps) {
 
+    const navigation = useNavigation<NavigationProp>();
     const funciones = useAppSelector((state) => state.funcion);
     if (!pelicula) return null;
 
     const funcionesPelicula = funciones.filter((funcion) => funcion.peliculaId === pelicula.id);
+
+    const seleccionarFuncion = (funcionId: number) => {
+        onClose();
+        navigation.navigate("Reserva", { funcionId });
+    }
 
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -40,7 +51,7 @@ export default function CarteleraModal({ visible, pelicula, onClose }: Funciones
                         <Text style={styles.subtitulo}>Funciones disponibles</Text>
 
                         {funcionesPelicula.map((funcion) => (
-                            <TouchableOpacity key={funcion.id} style={styles.funcion} onPress={() => { }}>
+                            <TouchableOpacity key={funcion.id} style={styles.funcion} onPress={() => seleccionarFuncion(funcion.id)}>
                                 <View style={styles.dato}>
                                     <CalendarDays size={18} color={colores.enfasis} />
                                     <Text style={styles.texto}>{funcion.fecha}</Text>

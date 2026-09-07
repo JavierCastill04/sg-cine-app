@@ -14,6 +14,7 @@ interface AsientosSeccionesProps {
     seleccionados?: string[];
     onSeleccionar?: (asientoId: string) => void;
     soloLectura?: boolean;
+    mostrarSeleccionados?: boolean;
 }
 
 export default function AsientosSecciones({
@@ -22,7 +23,8 @@ export default function AsientosSecciones({
     estadoAsientos = [],
     seleccionados = [],
     onSeleccionar,
-    soloLectura = false
+    soloLectura = false,
+    mostrarSeleccionados = false
 }: AsientosSeccionesProps) {
     const [seccionSeleccionada, setSeccionSeleccionada] = useState<Seccion>();
     const filas = Math.ceil(asientos.length / columnas);
@@ -157,15 +159,20 @@ export default function AsientosSecciones({
                             activeOpacity={0.7}
                         >
                             <Text style={commonStyles.cardTitle}>{seccion.nombre}</Text>
-                            <Text style={commonStyles.secondaryText}>
-                                {seccion.asientos.length} asientos
-                            </Text>
-                            <Text style={{ color: colores.verde }}>
-                                {disponibles} disponibles
-                            </Text>
-                            <Text style={{ color: colores.rojo }}>
-                                {seccion.asientos.length - disponibles} reservados
-                            </Text>
+                            <Text style={commonStyles.secondaryText}> {seccion.asientos.length} asientos </Text>
+                            <Text style={{ color: colores.verde }}> {disponibles} disponibles</Text>
+                            <Text style={{ color: colores.rojo }}>{seccion.asientos.length - disponibles} reservados</Text>
+                            {mostrarSeleccionados && (
+                                <Text style={styles.seleccionados}>
+                                    Seleccionados:{" "}
+                                    {seccion.asientos
+                                        .filter(asiento => seleccionados.includes(asiento.id))
+                                        .map(asiento =>
+                                            `${asiento.ubicacion.letraFila}${asiento.ubicacion.columna}`
+                                        )
+                                        .join(", ") || "Ninguno"}
+                                </Text>
+                            )}
                         </TouchableOpacity>
                     );
                 })}

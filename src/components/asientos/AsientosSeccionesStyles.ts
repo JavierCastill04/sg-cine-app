@@ -70,7 +70,6 @@ export const styles = StyleSheet.create({
         opacity: 0.45
     },
     seleccionado: {
-        backgroundColor: colores.enfasis,
         borderWidth: 1,
         borderColor: colores.enfasis
     },
@@ -84,5 +83,9 @@ export const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 5
-    }
+    },
+    seleccionados: {
+        color: colores.superficie,
+        textAlign: "center" as const
+    },
 });

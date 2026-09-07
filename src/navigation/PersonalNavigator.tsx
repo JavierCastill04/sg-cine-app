@@ -37,6 +37,7 @@ export default function PersonalNavigator() {
                             return null;
                     }
                 },
+                animation:'shift'
             })}>
             <Tab.Screen name="Peliculas" component={Peliculas} options={{headerTitle: 'Gestión de Películas'}} />
             <Tab.Screen name="Salas" component={Salas} options={{headerTitle: 'Gestión de Salas'}} />

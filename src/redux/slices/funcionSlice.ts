@@ -36,9 +36,26 @@ const funcionSlice = createSlice({
                 state.splice(indice, 1);
             }
         },
+
+        reserveAsientos: (state, action: PayloadAction<{ funcionId: number; asientos: string[]; }>) => {
+            const funcion = state.find(funcion => funcion.id === action.payload.funcionId);
+            if (!funcion) return;
+
+            action.payload.asientos.forEach(asientoId => {
+                const asiento = funcion.estadoAsientos.find(asiento => asiento.asientoId === asientoId);
+                if (asiento) {
+                    asiento.estado = "reservado";
+                } else {
+                    funcion.estadoAsientos.push({
+                        asientoId,
+                        estado: "reservado"
+                    });
+                }
+            });
+        },
     },
 });
 
-export const { addFuncion, updateFuncion, removeFuncion } = funcionSlice.actions;
+export const { addFuncion, updateFuncion, removeFuncion, reserveAsientos } = funcionSlice.actions;
 
 export default funcionSlice.reducer;
