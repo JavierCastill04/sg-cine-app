@@ -10,4 +10,7 @@ export interface Venta {
     cantidadBoletos: number;
     total: number;
     fechaVenta: string;
+    token: string;
+    tokenExpira: string;
+    tokenUsado: boolean;
 }

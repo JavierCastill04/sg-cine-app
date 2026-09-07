@@ -1,35 +1,37 @@
-import { useState, useEffect } from "react";
-import { ScrollView, Text, View, BackHandler } from "react-native";
+import { useEffect, useState } from "react";
+import { Alert, BackHandler, ScrollView, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useAppSelector } from "../../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import type { RootStackParamList } from "../../../navigation/types";
 import { commonStyles } from "../../../theme";
-import BarraProgreso from "../components/BarraProgreso";
-import PasoContainer from "../components/PasoContainer";
-import FormBotones from "../components/FormBotones";
-import PasoFuncion from "../components/PasoFuncion";
-import PasoAsientos from "../components/PasoAsientos";
-import PasoCliente from "../components/PasoCliente";
-import PasoConfirmacion from "../components/PasoConfirmacion";
 import type { Cliente } from "../../../types/Cliente";
-import { SafeAreaView } from "react-native-safe-area-context";
+import type { Venta } from "../../../types/Venta";
+import { BarraProgreso, FormBotones, PasoAsientos, PasoCliente, PasoConfirmacion, PasoContainer, PasoFuncion } from "../components";
 import { validarCampo } from "../validarCliente";
-import * as Crypto from "expo-crypto";
+import GeneradorQR from "../../ventas/GeneradorQR";
+import { generarBoleto } from "../../ventas/generarBoleto";
+import { enviarBoleto } from "../../ventas/enviarBoleto";
+import { registrarVenta } from "../../ventas/registrarVenta";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
-const pasos = ["Función", "Asientos", "Datos", "Confirmar"];
+const pasos = ["Función", "Asientos", "Datos", "Confirmar", "Boleto"];
 
 export default function ReservaScreen({ route }: any) {
     const navigation = useNavigation<NavigationProp>();
     const { funcionId } = route.params;
     const [paso, setPaso] = useState(1);
+    const [tokenQR, setTokenQR] = useState("");
+    const [comprando, setComprando] = useState(false);
+    const [venta, setVenta] = useState<Venta | null>(null);
+    const [pdfUri, setPdfUri] = useState<string | null>(null);
     const [seleccionados, setSeleccionados] = useState<string[]>([]);
     const [cliente, setCliente] = useState<Cliente>({ nombre: "", correo: "", telefono: "" });
     const funcion = useAppSelector(state => state.funcion.find(f => f.id === funcionId));
     const pelicula = useAppSelector(state => state.pelicula.find(p => p.id === funcion?.peliculaId));
     const sala = useAppSelector(state => state.sala.find(s => s.id === funcion?.salaId));
+    const dispatch = useAppDispatch();
 
     if (!funcion || !pelicula || !sala) {
         return (
@@ -92,6 +94,19 @@ export default function ReservaScreen({ route }: any) {
     };
 
     const confirmarCompra = () => {
+        if (comprando) { return; }
+        setComprando(true);
+
+        const venta = registrarVenta(dispatch, {
+            funcion,
+            pelicula,
+            cliente,
+            asientos: seleccionados,
+            total
+        });
+        setVenta(venta);
+        setTokenQR(venta.token);
+        setPaso(5);
     };
 
     useEffect(() => {
@@ -155,15 +170,66 @@ export default function ReservaScreen({ route }: any) {
                         />
                     )}
 
-                </PasoContainer>
+                    {paso === 5 && venta && (
+                        <GeneradorQR
+                            token={venta.token}
+                            onGenerado={async qr => {
+                                try {
+                                    const uri = await generarBoleto({
+                                        venta,
+                                        pelicula,
+                                        sala,
+                                        funcion,
+                                        qr
+                                    });
 
-                <FormBotones
-                    paso={paso}
-                    puedeContinuar={puedeContinuar()}
-                    onVolver={volver}
-                    onContinuar={continuar}
-                    onConfirmar={confirmarCompra}
-                />
+                                    setPdfUri(uri);
+
+                                } catch (error) {
+                                    Alert.alert(
+                                        "Error",
+                                        "No se pudo generar el boleto."
+                                    );
+                                }
+                            }}
+                            onEnviar={async () => {
+                                if (!pdfUri) {
+                                    Alert.alert(
+                                        "Error",
+                                        "El boleto todavía no está listo."
+                                    );
+                                    return;
+                                }
+
+                                try {
+                                    await enviarBoleto(venta, pdfUri);
+
+                                    Alert.alert(
+                                        "Boleto enviado",
+                                        `El boleto fue enviado a ${venta.cliente.correo}.`
+                                    );
+                                } catch (error) {
+                                    Alert.alert(
+                                        "Error",
+                                        "No se pudo enviar el boleto."
+                                    );
+                                }
+                            }}
+                            onSalir={() => navigation.pop()}
+                        />
+                    )}
+
+                </PasoContainer>
+                {paso < 5 && (
+                    <FormBotones
+                        paso={paso}
+                        puedeContinuar={puedeContinuar()}
+                        onVolver={volver}
+                        onContinuar={continuar}
+                        onConfirmar={confirmarCompra}
+                        confirmando={comprando}
+                    />
+                )}
             </ScrollView>
         </SafeAreaView>
     );
