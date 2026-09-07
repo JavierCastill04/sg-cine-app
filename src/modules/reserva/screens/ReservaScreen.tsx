@@ -13,6 +13,7 @@ import PasoAsientos from "../components/PasoAsientos";
 import PasoCliente from "../components/PasoCliente";
 import PasoConfirmacion from "../components/PasoConfirmacion";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { validarCampo, type CampoCliente } from "../validarCliente";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -75,11 +76,12 @@ export default function ReservaScreen({ route }: any) {
         }
 
         if (paso === 3) {
-            return (
-                cliente.nombre.trim() !== "" &&
-                cliente.correo.trim() !== "" &&
-                cliente.telefono.trim() !== ""
-            );
+            const errores = {
+                nombre: validarCampo("nombre", cliente.nombre),
+                correo: validarCampo("correo", cliente.correo),
+                telefono: validarCampo("telefono", cliente.telefono)
+            };
+            return Object.values(errores).every(error => error === "");
         }
 
         return paso < 4;
