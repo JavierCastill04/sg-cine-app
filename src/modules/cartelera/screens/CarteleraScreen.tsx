@@ -31,10 +31,6 @@ export default function CarteleraScreen() {
     const funciones = useAppSelector((state) => state.funcion);
     const salas = useAppSelector((state) => state.sala);
 
-    /*
-     * Películas que tienen al menos una función.
-     * Se mantiene la lógica que ya tenía la pantalla.
-     */
     const peliculasConFunciones = peliculas.filter((pelicula) =>
         funciones.some(
             (funcion) => funcion.peliculaId === pelicula.id
@@ -49,9 +45,6 @@ export default function CarteleraScreen() {
         return numFunciones > 3;
     });
 
-    /*
-     * Opciones disponibles para los filtros.
-     */
     const generos = useMemo(
         () => [...new Set(peliculas.map((pelicula) => pelicula.genero))],
         [peliculas]
@@ -66,9 +59,6 @@ export default function CarteleraScreen() {
         [peliculas]
     );
 
-    /*
-     * Busca el nombre de las salas relacionadas con una película.
-     */
     const obtenerSalasDePelicula = (peliculaId: number) => {
         const salaIds = funciones
             .filter((funcion) => funcion.peliculaId === peliculaId)
@@ -77,12 +67,6 @@ export default function CarteleraScreen() {
         return salas.filter((sala) => salaIds.includes(sala.id));
     };
 
-    /*
-     * Aplicación de búsqueda y filtros.
-     *
-     * La búsqueda se ejecuta cada vez que cambia "busqueda",
-     * por lo que es dinámica mientras el usuario escribe.
-     */
     const peliculasFiltradas = useMemo(() => {
         const texto = busqueda.trim().toLowerCase();
 
@@ -151,22 +135,11 @@ export default function CarteleraScreen() {
 
     return (
         <View style={commonStyles.containerScreen}>
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-            >
+            <ScrollView showsVerticalScrollIndicator={false}>
                 <CarteleraSlider
                     peliculasDestacadas={peliculasDestacadas}
                     onVerFunciones={abrirFunciones}
                 />
-
-                <Text
-                    style={[
-                        commonStyles.subtitle,
-                        { marginBottom: 20 },
-                    ]}
-                >
-                    Cartelera
-                </Text>
 
                 <Filtros
                     busqueda={busqueda}

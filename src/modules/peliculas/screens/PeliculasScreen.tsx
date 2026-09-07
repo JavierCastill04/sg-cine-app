@@ -4,6 +4,7 @@ import {
     TouchableOpacity,
     FlatList,
     Alert,
+    Modal,
 } from 'react-native';
 
 import { useState } from 'react';
@@ -16,11 +17,13 @@ import {
     removePelicula,
 } from '../../../redux/slices/peliculaSlice';
 
-import { commonStyles } from '../../../theme';
+import { commonStyles, colores } from '../../../theme';
 
 import PeliculaForm from '../components/PeliculaForm';
 import PeliculaCard from '../components/PeliculaCard';
-import { Pelicula } from "../../../types/Pelicula";
+
+import { Pelicula } from '../../../types/Pelicula';
+
 export default function PeliculasScreen() {
 
     const peliculas = useAppSelector(
@@ -181,6 +184,7 @@ export default function PeliculasScreen() {
             return;
         }
 
+        // Editar
         if (peliculaEditando !== null) {
 
             const peliculaActual = peliculas.find(
@@ -212,6 +216,7 @@ export default function PeliculasScreen() {
 
         } else {
 
+            // Agregar
             const nuevaPelicula = {
                 id: Date.now(),
                 codigo: codigo.trim(),
@@ -289,20 +294,20 @@ export default function PeliculasScreen() {
         );
     };
 
-     const cambiarDisponibilidad = (pelicula: Pelicula) => {
-  dispatch(
-    updatePelicula({
-      ...pelicula,
-      disponible: !pelicula.disponible,
-    })
-  );
-};
+    const cambiarDisponibilidad = (
+        pelicula: Pelicula
+    ) => {
+
+        dispatch(
+            updatePelicula({
+                ...pelicula,
+                disponible: !pelicula.disponible,
+            })
+        );
+    };
+
     return (
         <View style={commonStyles.containerScreen}>
-
-            <Text style={commonStyles.title}>
-                Gestión de Películas
-            </Text>
 
             <FlatList
                 data={peliculas}
@@ -311,7 +316,7 @@ export default function PeliculasScreen() {
                 }
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{
-                    paddingBottom: 30,
+                    paddingBottom: 100,
                 }}
 
                 ListHeaderComponent={
@@ -321,58 +326,90 @@ export default function PeliculasScreen() {
                             Películas registradas: {peliculas.length}
                         </Text>
 
-                        <TouchableOpacity
-                            style={[
-                                commonStyles.button,
-                                {
-                                    marginTop: 15,
-                                    marginBottom: 15,
-                                },
-                            ]}
-                            onPress={prepararNuevaPelicula}
-                        >
-                            <Text style={commonStyles.buttonText}>
-                                + Agregar película
-                            </Text>
-                        </TouchableOpacity>
-
-                        {mostrarFormulario && (
-                            <PeliculaForm
-                                codigo={codigo}
-                                nombre={nombre}
-                                genero={genero}
-                                duracion={duracion}
-                                clasificacion={clasificacion}
-                                precio={precio}
-
-                                setCodigo={setCodigo}
-                                setNombre={setNombre}
-                                setGenero={setGenero}
-                                setDuracion={setDuracion}
-                                setClasificacion={setClasificacion}
-                                setPrecio={setPrecio}
-
-                                editando={
-                                    peliculaEditando !== null
-                                }
-
-                                onGuardar={guardarPelicula}
-                                onCancelar={cancelarFormulario}
-                            />
-                        )}
-
                     </View>
                 }
 
                 renderItem={({ item }) => (
-                   <PeliculaCard
-                      pelicula={item}
-                      onEditar={() => editarPelicula(item)}
-                      onEliminar={() => eliminarPelicula(item.id, item.nombre)}
-                      onCambiarDisponibilidad={() => cambiarDisponibilidad(item)}
+                    <PeliculaCard
+                        pelicula={item}
+                        onEditar={() => editarPelicula(item)}
+                        onEliminar={() =>
+                            eliminarPelicula(
+                                item.id,
+                                item.nombre
+                            )
+                        }
+                        onCambiarDisponibilidad={() =>
+                            cambiarDisponibilidad(item)
+                        }
                     />
                 )}
             />
+
+            {/* Botón flotante */}
+            <TouchableOpacity
+                style={commonStyles.floatingButton}
+                onPress={prepararNuevaPelicula}
+                activeOpacity={0.8}
+            >
+                <Text
+                    style={{
+                        color: colores.blanco,
+                        fontSize: 32,
+                        fontWeight: '400',
+                        lineHeight: 36,
+                    }}
+                >
+                    +
+                </Text>
+            </TouchableOpacity>
+
+            {/* Modal del formulario */}
+            <Modal
+                visible={mostrarFormulario}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={cancelarFormulario}
+            >
+                <View style={commonStyles.modalOverlay}>
+
+                    <View
+                        style={[
+                            commonStyles.modal,
+                            {
+                                backgroundColor: colores.secundario,
+                                maxHeight: '90%',
+                            },
+                        ]}
+                    >
+
+                        <PeliculaForm
+                            codigo={codigo}
+                            nombre={nombre}
+                            genero={genero}
+                            duracion={duracion}
+                            clasificacion={clasificacion}
+                            precio={precio}
+
+                            setCodigo={setCodigo}
+                            setNombre={setNombre}
+                            setGenero={setGenero}
+                            setDuracion={setDuracion}
+                            setClasificacion={setClasificacion}
+                            setPrecio={setPrecio}
+
+                            editando={
+                                peliculaEditando !== null
+                            }
+
+                            onGuardar={guardarPelicula}
+                            onCancelar={cancelarFormulario}
+                        />
+
+                    </View>
+
+                </View>
+            </Modal>
 
         </View>
     );

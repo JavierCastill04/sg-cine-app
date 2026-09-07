@@ -3,6 +3,7 @@ import {
     Text,
     TouchableOpacity,
     TextInput,
+    ScrollView,
 } from 'react-native';
 
 import { commonStyles, colores } from '../../../theme';
@@ -49,151 +50,207 @@ export default function PeliculaForm({
     onCancelar,
 }: PeliculaFormProps) {
 
+    const inputStyle = {
+        backgroundColor: colores.secundario,
+        borderWidth: 1,
+        borderColor: colores.borde,
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        color: colores.blanco,
+        fontSize: 16,
+    };
+
     return (
-        <View
-            style={[
-                commonStyles.card,
-                {
-                    backgroundColor: colores.superficie,
-                    borderLeftWidth: 0,
-                    borderWidth: 1,
-                    borderColor: colores.borde,
-                },
-            ]}
+        <ScrollView
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
         >
-
-            <Text
-                style={[
-                    commonStyles.heading,
-                    {
-                        marginBottom: 15,
-                    },
-                ]}
+            <View
+                style={{
+                    backgroundColor: colores.secundario,
+                    borderRadius: 12,
+                    padding: 20,
+                }}
             >
-                {editando
-                    ? 'Editar película'
-                    : 'Nueva película'}
-            </Text>
 
-            <View style={commonStyles.inputView}>
-                <Text style={commonStyles.labelBlack}>
-                    Código
-                </Text>
-
-                <TextInput
-                    style={commonStyles.input}
-                    value={codigo}
-                    onChangeText={setCodigo}
-                    placeholder="Ej. PEL-005"
-                    placeholderTextColor={colores.textoSecundario}
-                />
-            </View>
-
-            <View style={commonStyles.inputView}>
-                <Text style={commonStyles.labelBlack}>
-                    Nombre
-                </Text>
-
-                <TextInput
-                    style={commonStyles.input}
-                    value={nombre}
-                    onChangeText={setNombre}
-                    placeholder="Nombre de la película"
-                    placeholderTextColor={colores.textoSecundario}
-                />
-            </View>
-
-            <View style={commonStyles.inputView}>
-                <Text style={commonStyles.labelBlack}>
-                    Género
-                </Text>
-
-                <TextInput
-                    style={commonStyles.input}
-                    value={genero}
-                    onChangeText={setGenero}
-                    placeholder="Ej. Acción"
-                    placeholderTextColor={colores.textoSecundario}
-                />
-            </View>
-
-            <View style={commonStyles.inputView}>
-                <Text style={commonStyles.labelBlack}>
-                    Duración
-                </Text>
-
-                <TextInput
-                    style={commonStyles.input}
-                    value={duracion}
-                    onChangeText={setDuracion}
-                    placeholder="Duración en minutos"
-                    placeholderTextColor={colores.textoSecundario}
-                    keyboardType="numeric"
-                />
-            </View>
-
-            <View style={commonStyles.inputView}>
-                <Text style={commonStyles.labelBlack}>
-                    Clasificación
-                </Text>
-
-                <TextInput
-                    style={commonStyles.input}
-                    value={clasificacion}
-                    onChangeText={setClasificacion}
-                    placeholder="Ej. 12+"
-                    placeholderTextColor={colores.textoSecundario}
-                />
-            </View>
-
-            <View style={commonStyles.inputView}>
-                <Text style={commonStyles.labelBlack}>
-                    Precio
-                </Text>
-
-                <TextInput
-                    style={commonStyles.input}
-                    value={precio}
-                    onChangeText={setPrecio}
-                    placeholder="Ej. 6.50"
-                    placeholderTextColor={colores.textoSecundario}
-                    keyboardType="numeric"
-                />
-            </View>
-
-            <TouchableOpacity
-                style={commonStyles.button}
-                onPress={onGuardar}
-            >
-                <Text style={commonStyles.buttonText}>
-                    {editando
-                        ? 'Actualizar película'
-                        : 'Guardar película'}
-                </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-                style={[
-                    commonStyles.button,
-                    {
-                        backgroundColor: colores.rojo,
-                        marginTop: 10,
-                    },
-                ]}
-                onPress={onCancelar}
-            >
                 <Text
                     style={[
-                        commonStyles.buttonText,
+                        commonStyles.heading,
                         {
                             color: colores.blanco,
+                            marginBottom: 20,
                         },
                     ]}
                 >
-                    Cancelar
+                    {editando
+                        ? 'Editar película'
+                        : 'Nueva película'}
                 </Text>
-            </TouchableOpacity>
 
-        </View>
+                {/* Código */}
+                <View style={commonStyles.inputView}>
+                    <Text
+                        style={[
+                            commonStyles.labelBlack,
+                            { color: colores.blanco },
+                        ]}
+                    >
+                        Código
+                    </Text>
+
+                    <TextInput
+                        style={inputStyle}
+                        value={codigo}
+                        onChangeText={setCodigo}
+                        placeholder="Ej. PEL-005"
+                        placeholderTextColor={colores.textoSecundario}
+                    />
+                </View>
+
+                {/* Nombre */}
+                <View style={commonStyles.inputView}>
+                    <Text
+                        style={[
+                            commonStyles.labelBlack,
+                            { color: colores.blanco },
+                        ]}
+                    >
+                        Nombre
+                    </Text>
+
+                    <TextInput
+                        style={inputStyle}
+                        value={nombre}
+                        onChangeText={setNombre}
+                        placeholder="Nombre de la película"
+                        placeholderTextColor={colores.textoSecundario}
+                    />
+                </View>
+
+                {/* Género */}
+                <View style={commonStyles.inputView}>
+                    <Text
+                        style={[
+                            commonStyles.labelBlack,
+                            { color: colores.blanco },
+                        ]}
+                    >
+                        Género
+                    </Text>
+
+                    <TextInput
+                        style={inputStyle}
+                        value={genero}
+                        onChangeText={setGenero}
+                        placeholder="Ej. Acción"
+                        placeholderTextColor={colores.textoSecundario}
+                    />
+                </View>
+
+                {/* Duración */}
+                <View style={commonStyles.inputView}>
+                    <Text
+                        style={[
+                            commonStyles.labelBlack,
+                            { color: colores.blanco },
+                        ]}
+                    >
+                        Duración
+                    </Text>
+
+                    <TextInput
+                        style={inputStyle}
+                        value={duracion}
+                        onChangeText={setDuracion}
+                        placeholder="Duración en minutos"
+                        placeholderTextColor={colores.textoSecundario}
+                        keyboardType="numeric"
+                    />
+                </View>
+
+                {/* Clasificación */}
+                <View style={commonStyles.inputView}>
+                    <Text
+                        style={[
+                            commonStyles.labelBlack,
+                            { color: colores.blanco },
+                        ]}
+                    >
+                        Clasificación
+                    </Text>
+
+                    <TextInput
+                        style={inputStyle}
+                        value={clasificacion}
+                        onChangeText={setClasificacion}
+                        placeholder="Ej. 12+"
+                        placeholderTextColor={colores.textoSecundario}
+                    />
+                </View>
+
+                {/* Precio */}
+                <View style={commonStyles.inputView}>
+                    <Text
+                        style={[
+                            commonStyles.labelBlack,
+                            { color: colores.blanco },
+                        ]}
+                    >
+                        Precio
+                    </Text>
+
+                    <TextInput
+                        style={inputStyle}
+                        value={precio}
+                        onChangeText={setPrecio}
+                        placeholder="Ej. 6.50"
+                        placeholderTextColor={colores.textoSecundario}
+                        keyboardType="numeric"
+                    />
+                </View>
+
+                {/* Guardar */}
+                <TouchableOpacity
+                    style={[
+                        commonStyles.button,
+                        {
+                            marginTop: 5,
+                        },
+                    ]}
+                    onPress={onGuardar}
+                >
+                    <Text style={commonStyles.buttonText}>
+                        {editando
+                            ? 'Actualizar película'
+                            : 'Guardar película'}
+                    </Text>
+                </TouchableOpacity>
+
+                {/* Cancelar */}
+                <TouchableOpacity
+                    style={[
+                        commonStyles.button,
+                        {
+                            backgroundColor: colores.rojo,
+                            marginTop: 10,
+                        },
+                    ]}
+                    onPress={onCancelar}
+                >
+                    <Text
+                        style={[
+                            commonStyles.buttonText,
+                            {
+                                color: colores.blanco,
+                            },
+                        ]}
+                    >
+                        Cancelar
+                    </Text>
+                </TouchableOpacity>
+
+            </View>
+        </ScrollView>
     );
 }

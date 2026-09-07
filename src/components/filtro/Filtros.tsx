@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
     Pressable,
     ScrollView,
@@ -6,6 +7,7 @@ import {
     TextInput,
     View,
 } from "react-native";
+
 import { colores } from "../../theme";
 
 interface FiltrosProps {
@@ -49,6 +51,8 @@ export default function Filtros({
     clasificaciones,
     salas,
 }: FiltrosProps) {
+    const [mostrarFiltros, setMostrarFiltros] = useState(false);
+
     return (
         <View style={styles.contenedor}>
             <TextInput
@@ -59,217 +63,238 @@ export default function Filtros({
                 style={styles.input}
             />
 
-            <Text style={styles.titulo}>Género</Text>
-
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.opciones}
+            <Pressable
+                style={styles.botonFiltros}
+                onPress={() => setMostrarFiltros(!mostrarFiltros)}
             >
-                <Pressable
-                    style={[
-                        styles.opcion,
-                        generoSeleccionado === "" && styles.opcionActiva,
-                    ]}
-                    onPress={() => onGeneroChange("")}
-                >
-                    <Text
-                        style={[
-                            styles.textoOpcion,
-                            generoSeleccionado === "" &&
-                                styles.textoOpcionActivo,
-                        ]}
-                    >
-                        Todos
-                    </Text>
-                </Pressable>
+                <Text style={styles.textoBotonFiltros}>
+                    Filtros {mostrarFiltros ? "▲" : "▼"}
+                </Text>
+            </Pressable>
 
-                {generos.map((genero) => (
-                    <Pressable
-                        key={genero}
-                        style={[
-                            styles.opcion,
-                            generoSeleccionado === genero &&
-                                styles.opcionActiva,
-                        ]}
-                        onPress={() => onGeneroChange(genero)}
+            {mostrarFiltros && (
+                <View style={styles.contenedorFiltros}>
+                    {/* Género */}
+                    <Text style={styles.titulo}>Género</Text>
+
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.opciones}
                     >
-                        <Text
+                        <Pressable
                             style={[
-                                styles.textoOpcion,
-                                generoSeleccionado === genero &&
-                                    styles.textoOpcionActivo,
+                                styles.opcion,
+                                generoSeleccionado === "" &&
+                                    styles.opcionActiva,
                             ]}
+                            onPress={() => onGeneroChange("")}
                         >
-                            {genero}
-                        </Text>
-                    </Pressable>
-                ))}
-            </ScrollView>
+                            <Text
+                                style={[
+                                    styles.textoOpcion,
+                                    generoSeleccionado === "" &&
+                                        styles.textoOpcionActivo,
+                                ]}
+                            >
+                                Todos
+                            </Text>
+                        </Pressable>
 
-            <Text style={styles.titulo}>Clasificación</Text>
+                        {generos.map((genero) => (
+                            <Pressable
+                                key={genero}
+                                style={[
+                                    styles.opcion,
+                                    generoSeleccionado === genero &&
+                                        styles.opcionActiva,
+                                ]}
+                                onPress={() => onGeneroChange(genero)}
+                            >
+                                <Text
+                                    style={[
+                                        styles.textoOpcion,
+                                        generoSeleccionado === genero &&
+                                            styles.textoOpcionActivo,
+                                    ]}
+                                >
+                                    {genero}
+                                </Text>
+                            </Pressable>
+                        ))}
+                    </ScrollView>
 
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.opciones}
-            >
-                <Pressable
-                    style={[
-                        styles.opcion,
-                        clasificacionSeleccionada === "" &&
-                            styles.opcionActiva,
-                    ]}
-                    onPress={() => onClasificacionChange("")}
-                >
-                    <Text
-                        style={[
-                            styles.textoOpcion,
-                            clasificacionSeleccionada === "" &&
-                                styles.textoOpcionActivo,
-                        ]}
+                    {/* Clasificación */}
+                    <Text style={styles.titulo}>Clasificación</Text>
+
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.opciones}
                     >
-                        Todas
-                    </Text>
-                </Pressable>
-
-                {clasificaciones.map((clasificacion) => (
-                    <Pressable
-                        key={clasificacion}
-                        style={[
-                            styles.opcion,
-                            clasificacionSeleccionada === clasificacion &&
-                                styles.opcionActiva,
-                        ]}
-                        onPress={() =>
-                            onClasificacionChange(clasificacion)
-                        }
-                    >
-                        <Text
+                        <Pressable
                             style={[
-                                styles.textoOpcion,
-                                clasificacionSeleccionada === clasificacion &&
-                                    styles.textoOpcionActivo,
+                                styles.opcion,
+                                clasificacionSeleccionada === "" &&
+                                    styles.opcionActiva,
                             ]}
+                            onPress={() => onClasificacionChange("")}
                         >
-                            {clasificacion}
-                        </Text>
-                    </Pressable>
-                ))}
-            </ScrollView>
+                            <Text
+                                style={[
+                                    styles.textoOpcion,
+                                    clasificacionSeleccionada === "" &&
+                                        styles.textoOpcionActivo,
+                                ]}
+                            >
+                                Todas
+                            </Text>
+                        </Pressable>
 
-            <Text style={styles.titulo}>Sala</Text>
+                        {clasificaciones.map((clasificacion) => (
+                            <Pressable
+                                key={clasificacion}
+                                style={[
+                                    styles.opcion,
+                                    clasificacionSeleccionada ===
+                                        clasificacion &&
+                                        styles.opcionActiva,
+                                ]}
+                                onPress={() =>
+                                    onClasificacionChange(clasificacion)
+                                }
+                            >
+                                <Text
+                                    style={[
+                                        styles.textoOpcion,
+                                        clasificacionSeleccionada ===
+                                            clasificacion &&
+                                            styles.textoOpcionActivo,
+                                    ]}
+                                >
+                                    {clasificacion}
+                                </Text>
+                            </Pressable>
+                        ))}
+                    </ScrollView>
 
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.opciones}
-            >
-                <Pressable
-                    style={[
-                        styles.opcion,
-                        salaSeleccionada === null && styles.opcionActiva,
-                    ]}
-                    onPress={() => onSalaChange(null)}
-                >
-                    <Text
-                        style={[
-                            styles.textoOpcion,
-                            salaSeleccionada === null &&
-                                styles.textoOpcionActivo,
-                        ]}
+                    {/* Sala */}
+                    <Text style={styles.titulo}>Sala</Text>
+
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.opciones}
                     >
-                        Todas
-                    </Text>
-                </Pressable>
-
-                {salas.map((sala) => (
-                    <Pressable
-                        key={sala.id}
-                        style={[
-                            styles.opcion,
-                            salaSeleccionada === sala.id &&
-                                styles.opcionActiva,
-                        ]}
-                        onPress={() => onSalaChange(sala.id)}
-                    >
-                        <Text
+                        <Pressable
                             style={[
-                                styles.textoOpcion,
-                                salaSeleccionada === sala.id &&
-                                    styles.textoOpcionActivo,
+                                styles.opcion,
+                                salaSeleccionada === null &&
+                                    styles.opcionActiva,
                             ]}
+                            onPress={() => onSalaChange(null)}
                         >
-                            {sala.nombre}
-                        </Text>
-                    </Pressable>
-                ))}
-            </ScrollView>
+                            <Text
+                                style={[
+                                    styles.textoOpcion,
+                                    salaSeleccionada === null &&
+                                        styles.textoOpcionActivo,
+                                ]}
+                            >
+                                Todas
+                            </Text>
+                        </Pressable>
 
-            <Text style={styles.titulo}>Estado</Text>
+                        {salas.map((sala) => (
+                            <Pressable
+                                key={sala.id}
+                                style={[
+                                    styles.opcion,
+                                    salaSeleccionada === sala.id &&
+                                        styles.opcionActiva,
+                                ]}
+                                onPress={() => onSalaChange(sala.id)}
+                            >
+                                <Text
+                                    style={[
+                                        styles.textoOpcion,
+                                        salaSeleccionada === sala.id &&
+                                            styles.textoOpcionActivo,
+                                    ]}
+                                >
+                                    {sala.nombre}
+                                </Text>
+                            </Pressable>
+                        ))}
+                    </ScrollView>
 
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.opciones}
-            >
-                <Pressable
-                    style={[
-                        styles.opcion,
-                        estadoSeleccionado === "todos" &&
-                            styles.opcionActiva,
-                    ]}
-                    onPress={() => onEstadoChange("todos")}
-                >
-                    <Text
-                        style={[
-                            styles.textoOpcion,
-                            estadoSeleccionado === "todos" &&
-                                styles.textoOpcionActivo,
-                        ]}
+                    {/* Estado */}
+                    <Text style={styles.titulo}>Estado</Text>
+
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.opciones}
                     >
-                        Todos
-                    </Text>
-                </Pressable>
+                        <Pressable
+                            style={[
+                                styles.opcion,
+                                estadoSeleccionado === "todos" &&
+                                    styles.opcionActiva,
+                            ]}
+                            onPress={() => onEstadoChange("todos")}
+                        >
+                            <Text
+                                style={[
+                                    styles.textoOpcion,
+                                    estadoSeleccionado === "todos" &&
+                                        styles.textoOpcionActivo,
+                                ]}
+                            >
+                                Todos
+                            </Text>
+                        </Pressable>
 
-                <Pressable
-                    style={[
-                        styles.opcion,
-                        estadoSeleccionado === "disponible" &&
-                            styles.opcionActiva,
-                    ]}
-                    onPress={() => onEstadoChange("disponible")}
-                >
-                    <Text
-                        style={[
-                            styles.textoOpcion,
-                            estadoSeleccionado === "disponible" &&
-                                styles.textoOpcionActivo,
-                        ]}
-                    >
-                        Disponible
-                    </Text>
-                </Pressable>
+                        <Pressable
+                            style={[
+                                styles.opcion,
+                                estadoSeleccionado === "disponible" &&
+                                    styles.opcionActiva,
+                            ]}
+                            onPress={() => onEstadoChange("disponible")}
+                        >
+                            <Text
+                                style={[
+                                    styles.textoOpcion,
+                                    estadoSeleccionado === "disponible" &&
+                                        styles.textoOpcionActivo,
+                                ]}
+                            >
+                                Disponible
+                            </Text>
+                        </Pressable>
 
-                <Pressable
-                    style={[
-                        styles.opcion,
-                        estadoSeleccionado === "noDisponible" &&
-                            styles.opcionActiva,
-                    ]}
-                    onPress={() => onEstadoChange("noDisponible")}
-                >
-                    <Text
-                        style={[
-                            styles.textoOpcion,
-                            estadoSeleccionado === "noDisponible" &&
-                                styles.textoOpcionActivo,
-                        ]}
-                    >
-                        No disponible
-                    </Text>
-                </Pressable>
-            </ScrollView>
+                        <Pressable
+                            style={[
+                                styles.opcion,
+                                estadoSeleccionado === "noDisponible" &&
+                                    styles.opcionActiva,
+                            ]}
+                            onPress={() => onEstadoChange("noDisponible")}
+                        >
+                            <Text
+                                style={[
+                                    styles.textoOpcion,
+                                    estadoSeleccionado === "noDisponible" &&
+                                        styles.textoOpcionActivo,
+                                ]}
+                            >
+                                No disponible
+                            </Text>
+                        </Pressable>
+                    </ScrollView>
+                </View>
+            )}
         </View>
     );
 }
@@ -287,7 +312,30 @@ const styles = StyleSheet.create({
         color: colores.texto,
         borderWidth: 1,
         borderColor: colores.borde,
-        marginBottom: 12,
+        marginBottom: 8,
+    },
+
+    botonFiltros: {
+        backgroundColor: colores.secundario,
+        borderWidth: 1,
+        borderColor: colores.borde,
+        borderRadius: 10,
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        alignItems: "center",
+    },
+
+    textoBotonFiltros: {
+        color: colores.superficie,
+        fontSize: 14,
+        fontWeight: "700",
+    },
+
+    contenedorFiltros: {
+        marginTop: 8,
+        padding: 10,
+        backgroundColor: colores.secundario,
+        borderRadius: 10,
     },
 
     titulo: {
