@@ -25,6 +25,7 @@
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-svg": "15.15.4",
+    "react-native-toast-message": "^2.5.0",
     "react-redux": "^9.3.0",
     "redux-persist": "^6.0.0"
   },
