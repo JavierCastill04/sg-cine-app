@@ -1,12 +1,11 @@
 import { useMemo, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { FlatList, Text, View } from "react-native";
 
 import { useAppSelector } from "../../../redux/hooks";
 import { Pelicula } from "../../../types/Pelicula";
 
 import Filtros from "../../../components/filtro/Filtros";
-
-import CarteleraList from "../components/CarteleraList";
+import CarteleraCard from "../components/CarteleraCard";
 import CarteleraSlider from "../components/CarteleraSlider";
 import CarteleraModal from "../components/CarteleraModal";
 
@@ -118,41 +117,43 @@ export default function CarteleraScreen() {
 
     return (
         <View style={commonStyles.containerScreen}>
-            <ScrollView showsVerticalScrollIndicator={false}>
-                <CarteleraSlider
-                    peliculasDestacadas={peliculasDestacadas}
-                    onVerFunciones={abrirFunciones}
-                />
+            <FlatList
+                data={peliculasFiltradas}
+                keyExtractor={item => item.id.toString()}
+                renderItem={({ item }) => (
+                    <CarteleraCard
+                        pelicula={item}
+                        onVerFunciones={abrirFunciones}
+                    />
+                )}
+                ListHeaderComponent={
+                    <>
+                        <CarteleraSlider
+                            peliculasDestacadas={peliculasDestacadas}
+                            onVerFunciones={abrirFunciones}
+                        />
 
-                <Filtros
-                    busqueda={busqueda}
-                    onBusquedaChange={setBusqueda}
-                    generoSeleccionado={generoSeleccionado}
-                    onGeneroChange={setGeneroSeleccionado}
-                    clasificacionSeleccionada={
-                        clasificacionSeleccionada
-                    }
-                    onClasificacionChange={
-                        setClasificacionSeleccionada
-                    }
-                    salaSeleccionada={salaSeleccionada}
-                    onSalaChange={setSalaSeleccionada}
-                    estadoSeleccionado={estadoSeleccionado}
-                    onEstadoChange={setEstadoSeleccionado}
-                    generos={generos}
-                    clasificaciones={clasificaciones}
-                    salas={salas.map((sala) => ({
-                        id: sala.id,
-                        nombre: sala.nombre,
-                    }))}
-                />
-
-                <CarteleraList
-                    peliculas={peliculasFiltradas}
-                    onVerFunciones={abrirFunciones}
-                />
-
-                {peliculasFiltradas.length === 0 && (
+                        <Filtros
+                            busqueda={busqueda}
+                            onBusquedaChange={setBusqueda}
+                            generoSeleccionado={generoSeleccionado}
+                            onGeneroChange={setGeneroSeleccionado}
+                            clasificacionSeleccionada={clasificacionSeleccionada}
+                            onClasificacionChange={setClasificacionSeleccionada}
+                            salaSeleccionada={salaSeleccionada}
+                            onSalaChange={setSalaSeleccionada}
+                            estadoSeleccionado={estadoSeleccionado}
+                            onEstadoChange={setEstadoSeleccionado}
+                            generos={generos}
+                            clasificaciones={clasificaciones}
+                            salas={salas.map(sala => ({
+                                id: sala.id,
+                                nombre: sala.nombre,
+                            }))}
+                        />
+                    </>
+                }
+                ListEmptyComponent={
                     <Text
                         style={[
                             commonStyles.text,
@@ -162,11 +163,11 @@ export default function CarteleraScreen() {
                             },
                         ]}
                     >
-                        No se encontraron películas con los
-                        filtros seleccionados.
+                        No se encontraron películas con los filtros seleccionados.
                     </Text>
-                )}
-            </ScrollView>
+                }
+                showsVerticalScrollIndicator={false}
+            />
 
             <CarteleraModal
                 visible={peliculaSeleccionada !== null}

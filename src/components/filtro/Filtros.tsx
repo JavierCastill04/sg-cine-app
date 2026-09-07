@@ -96,12 +96,6 @@ export default function Filtros({
 
                     <Text style={styles.titulo}>Sala</Text>
                     {renderOpciones(salas.map(sala => ({ id: sala.id, nombre: sala.nombre })), salaSeleccionada, onSalaChange, "Todas", null)}
-
-                    <Text style={styles.titulo}>Estado</Text>
-                    {renderOpciones([
-                        { id: "disponible", nombre: "Disponible" },
-                        { id: "noDisponible", nombre: "No disponible" }
-                    ], estadoSeleccionado, onEstadoChange, "Todos", "todos")}
                 </View>
             )}
         </View>

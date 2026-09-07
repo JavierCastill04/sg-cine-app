@@ -1,20 +1,12 @@
 import { useState } from "react";
-import {
-    ActivityIndicator,
-    Pressable,
-    Text,
-    View
-} from "react-native";
-import {
-    CameraView,
-    useCameraPermissions
-} from "expo-camera";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { marcarTokenUsado } from "../../../redux/slices/ventaSlice";
 import { colores } from "../../../theme";
-import styles from "../../../theme/escanerStyles";
+import styles from "../../../theme/scanerStyles";
+
 export default function EscanerScreen() {
     const [permission, requestPermission] = useCameraPermissions();
 
@@ -138,9 +130,6 @@ export default function EscanerScreen() {
                         );
 
                         setValido(false);
-                    }}
-                    onCameraReady={() => {
-                        console.log("Cámara lista");
                     }}
                 />
 
