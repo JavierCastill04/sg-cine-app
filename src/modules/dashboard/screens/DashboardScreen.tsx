@@ -89,10 +89,6 @@ export default function DashboardScreen() {
         <SafeAreaView style={commonStyles.containerScreen}>
             <ScrollView showsVerticalScrollIndicator={false}>
 
-                <Text style={commonStyles.title}>
-                    Dashboard
-                </Text>
-
                 <Text style={commonStyles.subtitle}>
                     Resumen general del cine
                 </Text>

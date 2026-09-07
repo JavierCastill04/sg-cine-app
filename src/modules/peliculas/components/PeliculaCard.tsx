@@ -1,5 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
+import { Pencil, Power, Trash2 } from "lucide-react-native";
+
 import { Pelicula } from "../../../types/Pelicula";
 import { commonStyles, colores } from "../../../theme";
 
@@ -58,24 +60,36 @@ export default function PeliculaCard({
       </Text>
 
       <View style={commonStyles.cardButtonContainter}>
+
+        {/* Editar */}
         <TouchableOpacity
-          style={commonStyles.cardButton}
+          style={[
+            commonStyles.cardButton,
+            { backgroundColor: colores.enfasis },
+          ]}
           onPress={onEditar}
         >
-          <Text style={commonStyles.buttonText}>
-            Editar
-          </Text>
+          <Pencil
+            size={20}
+            color={colores.negro}
+          />
         </TouchableOpacity>
 
+        {/* Habilitar / Deshabilitar */}
         <TouchableOpacity
-          style={commonStyles.cardButton}
+          style={[
+            commonStyles.cardButton,
+            { backgroundColor: colores.enfasis },
+          ]}
           onPress={onCambiarDisponibilidad}
         >
-          <Text style={commonStyles.buttonText}>
-            {pelicula.disponible ? "Deshabilitar" : "Habilitar"}
-          </Text>
+          <Power
+            size={20}
+            color={colores.negro}
+          />
         </TouchableOpacity>
 
+        {/* Eliminar */}
         <TouchableOpacity
           style={[
             commonStyles.cardButton,
@@ -83,15 +97,12 @@ export default function PeliculaCard({
           ]}
           onPress={onEliminar}
         >
-          <Text
-            style={[
-              commonStyles.buttonText,
-              { color: colores.blanco },
-            ]}
-          >
-            Eliminar
-          </Text>
+          <Trash2
+            size={20}
+            color={colores.negro}
+          />
         </TouchableOpacity>
+
       </View>
     </View>
   );
