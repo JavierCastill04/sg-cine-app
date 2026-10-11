@@ -19,11 +19,16 @@ import { usuariosData } from '../../../data/usuariosData';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
-export default function LoginScreen({ navigation }: Props) {
+export default function LoginScreen({
+    navigation,
+    route,
+}: Props) {
     const dispatch = useAppDispatch();
 
     const [usuario, setUsuario] = useState('');
     const [contraseña, setContraseña] = useState('');
+
+    const funcionId = route.params?.funcionId;
 
     const iniciarSesion = () => {
         const nombreUsuario = usuario.trim().toLowerCase();
@@ -65,6 +70,14 @@ export default function LoginScreen({ navigation }: Props) {
             text2: `Bienvenido, ${usuarioEncontrado.nombre}`,
             position: 'bottom',
         });
+
+        if (funcionId !== undefined) {
+            navigation.replace('Reserva', {
+                funcionId,
+                pasoInicial: 2,
+            });
+            return;
+        }
 
         if (navigation.canGoBack()) {
             navigation.goBack();

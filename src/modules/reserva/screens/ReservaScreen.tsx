@@ -20,8 +20,10 @@ const pasos = ["Función", "Asientos", "Datos", "Confirmar", "Boleto"];
 
 export default function ReservaScreen({ route }: any) {
     const navigation = useNavigation<NavigationProp>();
-    const { funcionId } = route.params;
-    const [paso, setPaso] = useState(1);
+    const { funcionId, pasoInicial } = route.params;
+    const [paso, setPaso] = useState(
+        pasoInicial === 2 ? 2 :1
+    );
     const [tokenQR, setTokenQR] = useState("");
     const [comprando, setComprando] = useState(false);
     const [venta, setVenta] = useState<Venta | null>(null);

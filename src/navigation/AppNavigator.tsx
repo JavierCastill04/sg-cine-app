@@ -4,15 +4,26 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from '../modules/home/screens/HomeScreen';
 import ClienteNavigator from './ClienteNavigator';
 import PersonalNavigator from './PersonalNavigator';
-import PrivateScreen from '../modules/auth/screens/PrivateScreen';
 import ReservaScreen from '../modules/reserva/screens/ReservaScreen';
 import LoginScreen from '../modules/auth/screens/LoginScreen';
 
+import { useAppSelector } from '../redux/hooks';
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
+    const {
+        autenticado,
+        usuario,
+        accesoPersonalAutorizado,
+    } = useAppSelector(state => state.auth);
+
+    const accesoPermitido =
+        autenticado &&
+        usuario?.rol === 'personal' &&
+        accesoPersonalAutorizado;
+
     return (
         <Stack.Navigator
             initialRouteName="ClienteNavigator"
@@ -30,17 +41,13 @@ export default function AppNavigator() {
                 options={{ headerShown: false }}
             />
 
-            <Stack.Screen
-                name="PersonalNavigator"
-                component={PersonalNavigator}
-                options={{ headerShown: false }}
-            />
-
-            <Stack.Screen
-                name="Private"
-                component={PrivateScreen}
-                options={{ headerShown: false }}
-            />
+            {accesoPermitido && (
+                <Stack.Screen
+                    name="PersonalNavigator"
+                    component={PersonalNavigator}
+                    options={{ headerShown: false }}
+                />
+            )}
 
             <Stack.Screen
                 name="Login"

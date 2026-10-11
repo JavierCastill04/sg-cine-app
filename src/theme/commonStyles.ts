@@ -243,4 +243,123 @@ export const commonStyles = StyleSheet.create({
         textAlign: 'center',
     },
 
+    carteleraModalHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: espaciado.md,
+    },
+
+    carteleraModalTitulo: {
+        flex: 1,
+        color: colores.enfasis,
+        fontSize: 20,
+        fontWeight: '700',
+        marginRight: espaciado.md,
+    },
+
+    carteleraModalSubtitulo: {
+        color: colores.superficie,
+        fontSize: 17,
+        fontWeight: '700',
+        marginBottom: espaciado.xs,
+    },
+
+    carteleraModalEtiquetas: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: espaciado.sm,
+        marginBottom: espaciado.xl,
+    },
+
+    carteleraModalEtiqueta: {
+        backgroundColor: colores.superficie,
+        color: colores.texto,
+        borderRadius: layout.radius * 2,
+        paddingVertical: espaciado.xs,
+        paddingHorizontal: espaciado.md,
+        fontSize: 12,
+        fontWeight: '600',
+    },
+
+    carteleraModalFuncion: {
+        backgroundColor: colores.fondo,
+        borderRadius: layout.radius,
+        padding: espaciado.lg,
+        marginTop: espaciado.md,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+
+    carteleraModalDato: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: espaciado.sm,
+    },
+
+    carteleraModalTexto: {
+        color: colores.superficie,
+        fontSize: 14,
+    },
+
+    
+    homePopcornRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginVertical: espaciado.md,
+        opacity: 0.35,
+    },
+
+    homeMainContent: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+
+    homeHeader: {
+        alignItems: 'center',
+        marginBottom: espaciado.xxl,
+    },
+
+    homeIconRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    homeTitle: {
+        ...tipografia.title,
+        color: colores.enfasis,
+        marginTop: espaciado.lg,
+    },
+
+    homeSubtitle: {
+        ...tipografia.subtitle,
+        color: colores.superficie,
+        marginTop: espaciado.sm,
+        marginBottom: espaciado.sm,
+        textAlign: 'center',
+    },
+
+    homeDescription: {
+        ...tipografia.body,
+        color: colores.claro,
+        marginTop: espaciado.sm,
+        textAlign: 'center',
+    },
+
+    homeAccessCard: {
+        backgroundColor: colores.secundario,
+        padding: espaciado.xl,
+        borderRadius: layout.radius,
+        borderLeftWidth: 4,
+        borderLeftColor: colores.enfasis,
+        alignItems: 'center',
+        gap: espaciado.md,
+    },
+
+    homeAccessButton: {
+        width: '100%',
+        marginTop: espaciado.md,
+    },
+
 });
