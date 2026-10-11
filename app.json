@@ -2,6 +2,7 @@
   "expo": {
     "name": "sg-cine-app",
     "slug": "sg-cine-app",
+    "owner": "sg-cine-team",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
