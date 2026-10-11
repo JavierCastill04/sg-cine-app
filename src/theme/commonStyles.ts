@@ -362,4 +362,32 @@ export const commonStyles = StyleSheet.create({
         marginTop: espaciado.md,
     },
 
+
+cinesContainer: {
+    flex: 1,
+    backgroundColor: colores.fondo,
+},
+
+cinesMapContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: espaciado.lg,
+},
+
+cinesComingSoon: {
+    ...tipografia.body,
+    color: colores.claro,
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+},
+
+cinesDescription: {
+    ...tipografia.body,
+    color: colores.claro,
+    marginTop: espaciado.md,
+    textAlign: 'center',
+},
+    
 });

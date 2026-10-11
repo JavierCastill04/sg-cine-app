@@ -10,6 +10,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.alealvarez75.sgcinema",
       "adaptiveIcon": {
         "backgroundColor": "#1B1C20",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -25,6 +26,11 @@
       "@react-native-community/datetimepicker",
       "expo-sharing",
       "expo-mail-composer"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b0fa4808-e5d7-4556-8753-366df54b3e5c"
+      }
+    }
   }
 }

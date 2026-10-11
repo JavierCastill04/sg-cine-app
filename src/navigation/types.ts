@@ -17,6 +17,7 @@ export type RootStackParamList = {
 
 export type ClienteTabParamList = {
     Cartelera: undefined;
+    Cines: undefined;
     Boletos: undefined;
     Perfil: undefined;
 };

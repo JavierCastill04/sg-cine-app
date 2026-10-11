@@ -1,8 +1,9 @@
 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Film, Ticket, UserRound } from 'lucide-react-native';
+import { Film, MapPin, Ticket, UserRound } from 'lucide-react-native';
 
 import Cartelera from '../modules/cartelera/screens/CarteleraScreen';
+import Cines from '../modules/cines/screens/CinesScreen';
 import Boletos from '../modules/boletos/screens/BoletosScreen';
 import Perfil from '../modules/perfil/screens/PerfilScreen';
 
@@ -21,28 +22,16 @@ export default function ClienteNavigator() {
                 tabBarIcon: ({ color, size }) => {
                     switch (route.name) {
                         case 'Cartelera':
-                            return (
-                                <Film
-                                    color={color}
-                                    size={size}
-                                />
-                            );
+                            return <Film color={color} size={size} />;
+
+                        case 'Cines':
+                            return <MapPin color={color} size={size} />;
 
                         case 'Boletos':
-                            return (
-                                <Ticket
-                                    color={color}
-                                    size={size}
-                                />
-                            );
+                            return <Ticket color={color} size={size} />;
 
                         case 'Perfil':
-                            return (
-                                <UserRound
-                                    color={color}
-                                    size={size}
-                                />
-                            );
+                            return <UserRound color={color} size={size} />;
 
                         default:
                             return null;
@@ -55,6 +44,14 @@ export default function ClienteNavigator() {
             <Tab.Screen
                 name="Cartelera"
                 component={Cartelera}
+            />
+
+            <Tab.Screen
+                name="Cines"
+                component={Cines}
+                options={{
+                    headerTitle: 'Nuestros Cines',
+                }}
             />
 
             <Tab.Screen
