@@ -199,4 +199,48 @@ export const commonStyles = StyleSheet.create({
     errorInput: {
         borderColor: 'red',
     },
+
+    centeredContent: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+
+    centeredHeader: {
+        alignItems: 'center',
+        marginBottom: espaciado.xl,
+        gap: espaciado.sm,
+    },
+
+    verticalButtons: {
+        flexDirection: 'column',
+        marginTop: espaciado.lg,
+        gap: espaciado.md,
+    },
+
+    buttonWithIcon: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: espaciado.sm,
+    },
+
+    profileButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: espaciado.sm,
+        marginTop: espaciado.lg,
+    },
+
+    dangerButton: {
+        backgroundColor: colores.rojo,
+    },
+
+    dangerButtonText: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: colores.blanco,
+        textAlign: 'center',
+    },
+
 });

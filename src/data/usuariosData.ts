@@ -1,4 +1,5 @@
-import { Usuario } from "../types/Usuario";
+
+import type { Usuario } from "../types/Usuario";
 
 export interface UsuarioData extends Usuario {
     contraseña: string;
@@ -10,6 +11,13 @@ export const usuariosData: UsuarioData[] = [
         usuario: "admin",
         contraseña: "1234",
         nombre: "Administrador",
-        rol: "admin"
-    }
+        rol: "personal",
+    },
+    {
+        id: 2,
+        usuario: "ana",
+        contraseña: "1234",
+        nombre: "Ana",
+        rol: "cliente",
+    },
 ];

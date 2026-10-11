@@ -1,3 +1,4 @@
+
 export type RootStackParamList = {
     Home: undefined;
     Private: undefined;
@@ -10,6 +11,7 @@ export type RootStackParamList = {
 export type ClienteTabParamList = {
     Cartelera: undefined;
     Boletos: undefined;
+    Perfil: undefined;
 };
 
 export type PersonalTabParamList = {
