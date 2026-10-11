@@ -1,13 +1,16 @@
+
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+
 import type { Usuario } from "../../types/Usuario";
 import type { AuthState } from "../../types/AuthState";
-
 
 const initialState: AuthState = {
     autenticado: false,
     usuario: null,
     biometriaActiva: false,
-    usuarioBiometria: null
+    usuarioBiometria: null,
+    accesoPersonalAutorizado: false,
+    versionSesion: 0,
 };
 
 const authSlice = createSlice({
@@ -15,16 +18,23 @@ const authSlice = createSlice({
     initialState,
     reducers: {
         login: (state, action: PayloadAction<Usuario>) => {
+            state.versionSesion += 1;
             state.autenticado = true;
             state.usuario = action.payload;
+            state.accesoPersonalAutorizado = false;
         },
 
         logout: state => {
+            state.versionSesion += 1;
             state.autenticado = false;
             state.usuario = null;
+            state.accesoPersonalAutorizado = false;
         },
 
-        activarBiometria: (state, action: PayloadAction<Usuario>) => {
+        activarBiometria: (
+            state,
+            action: PayloadAction<Usuario>
+        ) => {
             state.biometriaActiva = true;
             state.usuarioBiometria = action.payload;
         },
@@ -32,15 +42,39 @@ const authSlice = createSlice({
         desactivarBiometria: state => {
             state.biometriaActiva = false;
             state.usuarioBiometria = null;
-        }
-    }
+            state.accesoPersonalAutorizado = false;
+        },
+
+        autorizarAccesoPersonal: (
+            state,
+            action: PayloadAction<{
+                usuarioId: number;
+                versionSesion: number;
+            }>
+        ) => {
+            if (
+                state.autenticado &&
+                state.usuario?.rol === "personal" &&
+                state.usuario.id === action.payload.usuarioId &&
+                state.versionSesion === action.payload.versionSesion
+            ) {
+                state.accesoPersonalAutorizado = true;
+            }
+        },
+
+        revocarAccesoPersonal: state => {
+            state.accesoPersonalAutorizado = false;
+        },
+    },
 });
 
 export const {
     login,
     logout,
     activarBiometria,
-    desactivarBiometria
+    desactivarBiometria,
+    autorizarAccesoPersonal,
+    revocarAccesoPersonal,
 } = authSlice.actions;
 
 export default authSlice.reducer;

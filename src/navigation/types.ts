@@ -1,15 +1,25 @@
+
 export type RootStackParamList = {
     Home: undefined;
-    Private: undefined;
-    Login: undefined;
+
+    Login: {
+        funcionId?: number;
+    } | undefined;
+
     ClienteNavigator: undefined;
     PersonalNavigator: undefined;
-    Reserva: { funcionId: number };
+
+    Reserva: {
+        funcionId: number;
+        pasoInicial?: number;
+    };
 };
 
 export type ClienteTabParamList = {
     Cartelera: undefined;
+    Cines: undefined;
     Boletos: undefined;
+    Perfil: undefined;
 };
 
 export type PersonalTabParamList = {
