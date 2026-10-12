@@ -32,14 +32,15 @@ export interface ValidarReservaResponse {
 
 export const reservasService = {
     crear: (datos: CrearReservaRequest) =>
-        api.post<CrearReservaResponse>('/reservas', datos),
+        api.post<CrearReservaResponse>('/reservas', datos, true),
 
     misReservas: () =>
-        api.get<ReservaAPI[]>('/reservas/misReservas'),
+        api.get<ReservaAPI[]>('/reservas/misReservas', true),
 
     validar: (codigo: string) =>
         api.patch<ValidarReservaResponse>(
             `/reservas/${encodeURIComponent(codigo)}/validar`,
-            {}
+            {},
+            true
         ),
 };

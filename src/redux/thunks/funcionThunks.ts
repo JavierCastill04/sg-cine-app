@@ -78,32 +78,21 @@ export const cargarFuncionPorId = createAsyncThunk<
     }
 );
 
-
 export const cargarAsientosFuncion = createAsyncThunk<
     { funcionId: number; estadoAsientos: EstadoAsiento[] },
     { funcionId: number; salaId: number },
     { rejectValue: string }
 >(
     'funcion/cargarAsientos',
-    async ({ funcionId, salaId }, { rejectWithValue }) => {
+    async ({ funcionId }, { rejectWithValue }) => {
         try {
             const respuesta = await funcionesService.obtenerAsientos(funcionId);
 
             const estadoAsientos: EstadoAsiento[] = respuesta.asientos.map(
-                ({ asiento, estado }) => {
-                    const coincidencia = asiento.match(/^([A-Z]+)(\d+)$/);
-
-                    if (!coincidencia) {
-                        throw new Error(`Identificador de asiento inválido: ${asiento}`);
-                    }
-
-                    const [, fila, columna] = coincidencia;
-
-                    return {
-                        asientoId: `${salaId}-${fila}-${columna}`,
-                        estado: estado === 'ocupado' ? 'reservado' : 'disponible',
-                    };
-                }
+                ({ asiento, estado }) => ({
+                    asientoId: asiento,
+                    estado: estado === 'ocupado' ? 'reservado' : 'disponible',
+                })
             );
 
             return { funcionId, estadoAsientos };
@@ -116,7 +105,6 @@ export const cargarAsientosFuncion = createAsyncThunk<
         }
     }
 );
-
 export const crearFuncionThunk = createAsyncThunk<
     Funcion,
     CrearFuncionRequest,

@@ -1,24 +1,17 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, BackHandler, ScrollView, Text, View, } from "react-native";
+import { ActivityIndicator, Alert, BackHandler, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { cargarAsientosFuncion, cargarFuncionPorId, } from "../../../redux/thunks/funcionThunks";
+import { cargarAsientosFuncion, cargarFuncionPorId } from "../../../redux/thunks/funcionThunks";
 import { crearReservaThunk } from "../../../redux/thunks/reservasThunks";
 import { cargarPeliculas } from "../../../redux/thunks/peliculaThunks";
 import { cargarSalas } from "../../../redux/thunks/salaThunks";
 import type { RootStackParamList } from "../../../navigation/types";
 import { commonStyles, colores } from "../../../theme";
 import type { Venta } from "../../../types/Venta";
-import {
-    BarraProgreso,
-    FormBotones,
-    PasoAsientos,
-    PasoConfirmacion,
-    PasoContainer,
-    PasoFuncion,
-} from "../components";
+import { BarraProgreso, FormBotones, PasoAsientos, PasoConfirmacion, PasoContainer, PasoFuncion } from "../components";
 import GeneradorQR from "../../ventas/GeneradorQR";
 import { generarBoleto } from "../../ventas/generarBoleto";
 import { enviarBoleto } from "../../ventas/enviarBoleto";
@@ -28,19 +21,24 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const pasos = ["Función", "Asientos", "Confirmar", "Boleto"];
 
 const convertirAsientoApi = (asientoId: string): string => {
-    const coincidencia = asientoId.match(/^\d+-([A-Z]+)-(\d+)$/);
-
-    if (!coincidencia) {
-        throw new Error(`Identificador de asiento inválido: ${asientoId} `);
+    // Si ya tiene el formato de la API, se conserva sin modificar.
+    if (/^[A-Z]+[1-9]\d*$/.test(asientoId)) {
+        return asientoId;
     }
 
-    return `${coincidencia[1]}${coincidencia[2]} `;
+    // Convierte el identificador interno sala-fila-columna al formato de la API.
+    const coincidencia = asientoId.match(/^\d+-([A-Z]+)-([1-9]\d*)$/);
+
+    if (!coincidencia) {
+        throw new Error(`Identificador de asiento inválido: ${asientoId}`);
+    }
+
+    return `${coincidencia[1]}${coincidencia[2]}`;
 };
 
 export default function ReservaScreen({ route }: any) {
     const navigation = useNavigation<NavigationProp>();
     const { funcionId, pasoInicial } = route.params;
-
     const dispatch = useAppDispatch();
 
     const [paso, setPaso] = useState(pasoInicial === 2 ? 2 : 1);
@@ -57,10 +55,7 @@ export default function ReservaScreen({ route }: any) {
     );
 
     const pelicula = useAppSelector(
-        state =>
-            state.pelicula.lista.find(
-                p => p.id === funcion?.peliculaId
-            )
+        state => state.pelicula.lista.find(p => p.id === funcion?.peliculaId)
     );
 
     const sala = useAppSelector(
@@ -83,9 +78,7 @@ export default function ReservaScreen({ route }: any) {
                     dispatch(cargarSalas()).unwrap(),
                 ]);
 
-                if (!vigente) {
-                    return;
-                }
+                if (!vigente) return;
 
                 const funcionCargada = resultados[0];
 
@@ -103,9 +96,7 @@ export default function ReservaScreen({ route }: any) {
                     );
                 }
             } finally {
-                if (vigente) {
-                    setCargandoDatos(false);
-                }
+                if (vigente) setCargandoDatos(false);
             }
         };
 
@@ -117,9 +108,7 @@ export default function ReservaScreen({ route }: any) {
     }, [dispatch, funcionId]);
 
     useEffect(() => {
-        if (paso !== 2 || !funcion || !sala) {
-            return;
-        }
+        if (paso !== 2 || !funcion || !sala) return;
 
         let vigente = true;
 
@@ -143,9 +132,7 @@ export default function ReservaScreen({ route }: any) {
                     );
                 }
             } finally {
-                if (vigente) {
-                    setCargandoAsientos(false);
-                }
+                if (vigente) setCargandoAsientos(false);
             }
         };
 
@@ -178,17 +165,8 @@ export default function ReservaScreen({ route }: any) {
     if (cargandoDatos) {
         return (
             <SafeAreaView style={commonStyles.containerScreen}>
-                <View
-                    style={{
-                        flex: 1,
-                        alignItems: "center",
-                        justifyContent: "center",
-                    }}
-                >
-                    <ActivityIndicator
-                        size="large"
-                        color={colores.enfasis}
-                    />
+                <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                    <ActivityIndicator size="large" color={colores.enfasis} />
                     <Text style={commonStyles.text}>
                         Cargando datos de la función...
                     </Text>
@@ -228,9 +206,7 @@ export default function ReservaScreen({ route }: any) {
     };
 
     const continuar = () => {
-        if (puedeContinuar()) {
-            setPaso(actual => actual + 1);
-        }
+        if (puedeContinuar()) setPaso(actual => actual + 1);
     };
 
     const volver = () => {
@@ -243,9 +219,7 @@ export default function ReservaScreen({ route }: any) {
     };
 
     const confirmarCompra = async () => {
-        if (comprando) {
-            return;
-        }
+        if (comprando) return;
 
         if (!usuario || usuario.rol !== "cliente") {
             Alert.alert(
@@ -275,13 +249,9 @@ export default function ReservaScreen({ route }: any) {
                 })
             ).unwrap();
 
-            const fechaFin = new Date(
-                `${funcion.fecha}T${funcion.horaInicio} `
-            );
+            const fechaFin = new Date(`${funcion.fecha}T${funcion.horaInicio}`);
 
-            fechaFin.setMinutes(
-                fechaFin.getMinutes() + pelicula.duracion
-            );
+            fechaFin.setMinutes(fechaFin.getMinutes() + pelicula.duracion);
 
             const nuevaVenta: Venta = {
                 id: reserva.id,
@@ -316,19 +286,13 @@ export default function ReservaScreen({ route }: any) {
     return (
         <SafeAreaView style={commonStyles.containerScreen}>
             <ScrollView>
-                <Text style={commonStyles.title}>
-                    Reserva de boletos
-                </Text>
+                <Text style={commonStyles.title}>Reserva de boletos</Text>
 
                 <BarraProgreso paso={paso} pasos={pasos} />
 
                 <PasoContainer paso={paso}>
                     {paso === 1 && (
-                        <PasoFuncion
-                            pelicula={pelicula}
-                            sala={sala}
-                            funcion={funcion}
-                        />
+                        <PasoFuncion pelicula={pelicula} sala={sala} funcion={funcion} />
                     )}
 
                     {paso === 2 && (
@@ -375,18 +339,12 @@ export default function ReservaScreen({ route }: any) {
 
                                     setPdfUri(uri);
                                 } catch {
-                                    Alert.alert(
-                                        "Error",
-                                        "No se pudo generar el boleto."
-                                    );
+                                    Alert.alert("Error", "No se pudo generar el boleto.");
                                 }
                             }}
                             onEnviar={async () => {
                                 if (!pdfUri) {
-                                    Alert.alert(
-                                        "Error",
-                                        "El boleto todavía no está listo."
-                                    );
+                                    Alert.alert("Error", "El boleto todavía no está listo.");
                                     return;
                                 }
 
