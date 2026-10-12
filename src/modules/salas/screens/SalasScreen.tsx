@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react';
 import { View, TouchableOpacity, Alert } from 'react-native';
 import { Plus } from 'lucide-react-native';
+import Toast from 'react-native-toast-message';
+
 import type { Sala } from '../../../types/Sala';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import { commonStyles } from '../../../theme';
 import { cargarCines } from '../../../redux/thunks/cineThunks';
-import { cargarSalas, crearSalaThunk, actualizarSalaThunk, eliminarSalaThunk, } from '../../../redux/thunks/salaThunks';
+import {
+    cargarSalas,
+    crearSalaThunk,
+    actualizarSalaThunk,
+    eliminarSalaThunk,
+} from '../../../redux/thunks/salaThunks';
+
 import SalaList from '../components/SalasList';
 import SalaModal from '../components/SalaModal';
 
@@ -15,8 +23,11 @@ export default function SalasScreen() {
     const salas = useAppSelector(state => state.sala);
     const funciones = useAppSelector(state => state.funcion);
     const cines = useAppSelector(state => state.cine.lista);
+
     const [modalVisible, setModalVisible] = useState(false);
-    const [salaSeleccionada, setSalaSeleccionada] = useState<Sala | undefined>(undefined);
+    const [salaSeleccionada, setSalaSeleccionada] = useState<Sala | undefined>(
+        undefined
+    );
 
     useEffect(() => {
         dispatch(cargarCines());
@@ -34,10 +45,12 @@ export default function SalasScreen() {
 
     const agregarSala = () => {
         if (cines.length === 0) {
-            Alert.alert(
-                'Sin cines disponibles',
-                'No hay cines cargados. Verifica que existan cines antes de crear una sala.'
-            );
+            Toast.show({
+                type: 'info',
+                text1: 'Sin cines disponibles',
+                text2: 'Primero debe existir un cine para registrar una sala.',
+                position: 'bottom',
+            });
             return;
         }
 
@@ -51,10 +64,12 @@ export default function SalasScreen() {
         );
 
         if (estaEnFuncion) {
-            Alert.alert(
-                'No se puede editar',
-                'Esta sala está asignada a una función.'
-            );
+            Toast.show({
+                type: 'error',
+                text1: 'No se puede editar la sala',
+                text2: 'Esta sala está asignada a una función.',
+                position: 'bottom',
+            });
             return;
         }
 
@@ -68,10 +83,12 @@ export default function SalasScreen() {
         );
 
         if (estaEnFuncion) {
-            Alert.alert(
-                'No se puede eliminar',
-                'Esta sala está asignada a una función.'
-            );
+            Toast.show({
+                type: 'error',
+                text1: 'No se puede eliminar la sala',
+                text2: 'Esta sala está asignada a una función.',
+                position: 'bottom',
+            });
             return;
         }
 
@@ -88,14 +105,23 @@ export default function SalasScreen() {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await dispatch(eliminarSalaThunk(sala.id)).unwrap();
+                            await dispatch(
+                                eliminarSalaThunk(sala.id)
+                            ).unwrap();
+
+                            Toast.show({
+                                type: 'success',
+                                text1: 'Sala eliminada',
+                                text2: `"${sala.nombre}" se eliminó correctamente.`,
+                                position: 'bottom',
+                            });
                         } catch (error) {
-                            Alert.alert(
-                                'Error',
-                                typeof error === 'string'
-                                    ? error
-                                    : 'No se pudo eliminar la sala.'
-                            );
+                            Toast.show({
+                                type: 'error',
+                                text1: 'No se pudo eliminar la sala',
+                                text2: 'Verifica que no tenga funciones asociadas e inténtalo nuevamente.',
+                                position: 'bottom',
+                            });
                         }
                     },
                 },
@@ -121,18 +147,36 @@ export default function SalasScreen() {
                         datos: solicitud,
                     })
                 ).unwrap();
-            } else {
-                await dispatch(crearSalaThunk(solicitud)).unwrap();
-            }
 
-            cerrarModal();
+                cerrarModal();
+
+                Toast.show({
+                    type: 'success',
+                    text1: 'Sala actualizada',
+                    text2: `"${datos.nombre}" se actualizó correctamente.`,
+                    position: 'bottom',
+                });
+            } else {
+                await dispatch(
+                    crearSalaThunk(solicitud)
+                ).unwrap();
+
+                cerrarModal();
+
+                Toast.show({
+                    type: 'success',
+                    text1: 'Sala registrada',
+                    text2: `"${datos.nombre}" se agregó correctamente.`,
+                    position: 'bottom',
+                });
+            }
         } catch (error) {
-            Alert.alert(
-                'Error',
-                typeof error === 'string'
-                    ? error
-                    : 'No se pudo guardar la sala.'
-            );
+            Toast.show({
+                type: 'error',
+                text1: 'No se pudo guardar la sala',
+                text2: 'Verifica los datos e inténtalo nuevamente.',
+                position: 'bottom',
+            });
         }
     };
 

@@ -1,9 +1,16 @@
 import { useCallback, useState } from 'react';
 import { View, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { Plus } from 'lucide-react-native';
+import Toast from 'react-native-toast-message';
+
 import type { Funcion } from '../../../types/Funcion';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
-import { cargarFunciones, crearFuncionThunk, reprogramarFuncionThunk, cancelarFuncionThunk } from '../../../redux/thunks/funcionThunks';
+import {
+    cargarFunciones,
+    crearFuncionThunk,
+    reprogramarFuncionThunk,
+    cancelarFuncionThunk,
+} from '../../../redux/thunks/funcionThunks';
 import { cargarPeliculas } from '../../../redux/thunks/peliculaThunks';
 import { cargarSalas } from '../../../redux/thunks/salaThunks';
 import { commonStyles, colores } from '../../../theme';
@@ -23,6 +30,7 @@ export default function FuncionesScreen() {
     const [modalVisible, setModalVisible] = useState(false);
     const [funcionSeleccionada, setFuncionSeleccionada] =
         useState<Funcion | undefined>();
+
     const [detalleVisible, setDetalleVisible] = useState(false);
     const [funcionDetalle, setFuncionDetalle] =
         useState<Funcion | undefined>();
@@ -51,10 +59,12 @@ export default function FuncionesScreen() {
 
     const editarFuncion = (funcion: Funcion) => {
         if (funcion.estado === 'cancelada') {
-            Alert.alert(
-                'Función cancelada',
-                'No se puede reprogramar una función cancelada.'
-            );
+            Toast.show({
+                type: 'error',
+                text1: 'No se puede reprogramar',
+                text2: 'Esta función ya está cancelada.',
+                position: 'bottom',
+            });
             return;
         }
 
@@ -69,7 +79,12 @@ export default function FuncionesScreen() {
 
     const cancelarFuncion = (funcion: Funcion) => {
         if (funcion.estado === 'cancelada') {
-            Alert.alert('Función cancelada', 'Esta función ya está cancelada.');
+            Toast.show({
+                type: 'info',
+                text1: 'Función cancelada',
+                text2: 'Esta función ya se encuentra cancelada.',
+                position: 'bottom',
+            });
             return;
         }
 
@@ -77,24 +92,32 @@ export default function FuncionesScreen() {
             'Cancelar función',
             `¿Seguro que deseas cancelar la función #${funcion.id}?`,
             [
-                { text: 'Volver', style: 'cancel' },
+                {
+                    text: 'Volver',
+                    style: 'cancel',
+                },
                 {
                     text: 'Cancelar función',
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            const respuesta = await dispatch(
+                            await dispatch(
                                 cancelarFuncionThunk(funcion.id)
                             ).unwrap();
 
-                            Alert.alert('Función cancelada', respuesta.message);
+                            Toast.show({
+                                type: 'success',
+                                text1: 'Función cancelada',
+                                text2: `La función #${funcion.id} se canceló correctamente.`,
+                                position: 'bottom',
+                            });
                         } catch (error) {
-                            Alert.alert(
-                                'Error',
-                                typeof error === 'string'
-                                    ? error
-                                    : 'No se pudo cancelar la función.'
-                            );
+                            Toast.show({
+                                type: 'error',
+                                text1: 'No se pudo cancelar la función',
+                                text2: 'Inténtalo nuevamente en unos momentos.',
+                                position: 'bottom',
+                            });
                         }
                     },
                 },
@@ -125,21 +148,35 @@ export default function FuncionesScreen() {
                     })
                 ).unwrap();
 
-                Alert.alert('Éxito', 'La función se reprogramó correctamente.');
+                cerrarModal();
+
+                Toast.show({
+                    type: 'success',
+                    text1: 'Función reprogramada',
+                    text2: 'La fecha y el horario se actualizaron correctamente.',
+                    position: 'bottom',
+                });
             } else {
-                await dispatch(crearFuncionThunk(datosApi)).unwrap();
+                await dispatch(
+                    crearFuncionThunk(datosApi)
+                ).unwrap();
 
-                Alert.alert('Éxito', 'La función se creó correctamente.');
+                cerrarModal();
+
+                Toast.show({
+                    type: 'success',
+                    text1: 'Función registrada',
+                    text2: 'La nueva función se agregó correctamente.',
+                    position: 'bottom',
+                });
             }
-
-            cerrarModal();
         } catch (error) {
-            Alert.alert(
-                'Error',
-                typeof error === 'string'
-                    ? error
-                    : 'No se pudo guardar la función.'
-            );
+            Toast.show({
+                type: 'error',
+                text1: 'No se pudo guardar la función',
+                text2: 'Verifica los datos, la sala y el horario seleccionado.',
+                position: 'bottom',
+            });
         }
     };
 

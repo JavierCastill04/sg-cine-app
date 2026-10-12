@@ -5,7 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import Toast from 'react-native-toast-message';
-
+import { toastConfig } from './src/components/toast/ToastPersonalizado';
 import AppNavigator from './src/navigation/AppNavigator';
 import { store, persistor, type RootState, type AppDispatch } from './src/redux/store';
 import { restaurarSesion, logout } from './src/redux/slices/authSlice';
@@ -52,7 +52,12 @@ function ContenidoApp() {
       <NavigationContainer>
         <AppNavigator />
       </NavigationContainer>
-      <Toast />
+      <Toast
+    config={toastConfig}
+    position="bottom"
+    bottomOffset={45}
+    visibilityTime={3500}
+/>
     </SafeAreaProvider>
   );
 }

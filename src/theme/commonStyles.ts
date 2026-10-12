@@ -491,5 +491,45 @@ cinesDistancia: {
     dashboardReintentar: {
         marginTop: espaciado.lg,
     },
+    
+    toastContainer: {
+        width: '90%',
+        backgroundColor: colores.secundario,
+        borderRadius: layout.radius,
+        borderLeftWidth: 4,
+        padding: espaciado.md,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: espaciado.md,
+    },
+
+    toastExito: {
+        borderLeftColor: colores.verde,
+    },
+
+    toastError: {
+        borderLeftColor: colores.rojo,
+    },
+
+    toastInfo: {
+        borderLeftColor: colores.enfasis,
+    },
+
+    toastContenido: {
+        flex: 1,
+    },
+
+    toastTitulo: {
+        color: colores.blanco,
+        fontSize: 15,
+        fontWeight: '700',
+        marginBottom: espaciado.xs,
+    },
+
+    toastDescripcion: {
+        color: colores.claro,
+        fontSize: 13,
+    },
+
 
 });

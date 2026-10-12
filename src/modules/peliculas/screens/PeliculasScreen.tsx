@@ -11,7 +11,7 @@ import PeliculaForm from '../components/PeliculaForm';
 import PeliculaCard from '../components/PeliculaCard';
 import type { ErroresPelicula } from '../peliculaValidaciones';
 import { validarCampo } from '../peliculaValidaciones';
-
+import Toast from 'react-native-toast-message';
 export default function PeliculasScreen() {
     const dispatch = useAppDispatch();
     const peliculas = useAppSelector(state => state.pelicula.lista);
@@ -140,22 +140,32 @@ export default function PeliculasScreen() {
                     actualizarPeliculaThunk({ id: peliculaEditando, datos })
                 ).unwrap();
 
-                Alert.alert('Película actualizada', `La película "${nombre.trim()}" se actualizó correctamente en Railway.`);
+                Toast.show({
+    type: 'success',
+    text1: 'Película actualizada',
+    text2: `Los cambios de "${nombre.trim()}" se guardaron correctamente.`,
+    position: 'bottom',
+});
             } else {
                 await dispatch(crearPeliculaThunk(datos)).unwrap();
 
-                Alert.alert('Película agregada', `La película "${nombre.trim()}" se registró correctamente en Railway.`);
+                Toast.show({
+    type: 'success',
+    text1: 'Película registrada',
+    text2: `"${nombre.trim()}" se agregó correctamente al catálogo.`,
+    position: 'bottom',
+});
             }
 
             limpiarFormulario();
             setMostrarFormulario(false);
         } catch (error) {
-            Alert.alert(
-                'Error al guardar',
-                typeof error === 'string'
-                    ? error
-                    : 'No se pudo guardar la película. Verifica tu conexión, tus permisos y que el código no exista.'
-            );
+           Toast.show({
+    type: 'error',
+    text1: 'No se pudo guardar la película',
+    text2: 'Verifica los datos e inténtalo nuevamente.',
+    position: 'bottom',
+});
         } finally {
             setGuardando(false);
         }
@@ -173,14 +183,19 @@ export default function PeliculasScreen() {
                     onPress: async () => {
                         try {
                             await dispatch(eliminarPeliculaThunk(id)).unwrap();
-                            Alert.alert('Película eliminada', `La película "${nombrePelicula}" se eliminó correctamente de Railway.`);
+                            Toast.show({
+    type: 'success',
+    text1: 'Película eliminada',
+    text2: `"${nombrePelicula}" se eliminó correctamente del catálogo.`,
+    position: 'bottom',
+});
                         } catch (error) {
-                            Alert.alert(
-                                'No se pudo eliminar',
-                                typeof error === 'string'
-                                    ? error
-                                    : 'La película puede tener funciones asociadas o existir un problema de conexión o permisos.'
-                            );
+                        Toast.show({
+    type: 'error',
+    text1: 'No se pudo eliminar la película',
+    text2: 'Comprueba si tiene funciones asociadas e inténtalo nuevamente.',
+    position: 'bottom',
+});
                         }
                     },
                 },
@@ -205,17 +220,19 @@ export default function PeliculasScreen() {
                 })
             ).unwrap();
 
-            Alert.alert(
-                'Estado actualizado',
-                `La película "${pelicula.nombre}" ahora está ${nuevoEstado.toLowerCase()}.`
-            );
+Toast.show({
+    type: 'success',
+    text1: 'Disponibilidad actualizada',
+    text2: `"${pelicula.nombre}" ahora está ${nuevoEstado.toLowerCase()}.`,
+    position: 'bottom',
+});
         } catch (error) {
-            Alert.alert(
-                'Error al cambiar disponibilidad',
-                typeof error === 'string'
-                    ? error
-                    : 'No se pudo completar el cambio de estado en Railway.'
-            );
+Toast.show({
+    type: 'error',
+    text1: 'No se pudo actualizar la disponibilidad',
+    text2: 'Inténtalo nuevamente en unos momentos.',
+    position: 'bottom',
+});
         } finally {
             setPeliculaCambiandoEstadoId(null);
         }
