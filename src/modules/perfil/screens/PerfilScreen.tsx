@@ -1,55 +1,39 @@
-
-import {
-    View,
-    Text,
-    TouchableOpacity,
-} from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { establecerToken } from '../../../services/api';
-import {
-    UserRound,
-    LogIn,
-    LogOut,
-    ShieldCheck,
-    UserPlus,
-} from 'lucide-react-native';
-
+import { UserRound, LogIn, LogOut, ShieldCheck, UserPlus } from 'lucide-react-native';
 import type { RootStackParamList } from '../../../navigation/types';
 import { commonStyles, colores } from '../../../theme';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import { logout } from '../../../redux/slices/authSlice';
+import { eliminarToken } from '../../../services/secureStorage';
 
 type Navigation = NativeStackNavigationProp<RootStackParamList>;
 
 export default function PerfilScreen() {
     const navigation = useNavigation<Navigation>();
     const dispatch = useAppDispatch();
-
-    const { autenticado, usuario } = useAppSelector(
-        state => state.auth
-    );
+    const { autenticado, usuario } = useAppSelector(state => state.auth);
 
     const esPersonal = usuario?.rol === 'personal';
 
-    const cerrarSesion = () => {
-    establecerToken(null);
-    dispatch(logout());
-};
+    const cerrarSesion = async () => {
+        try {
+            await eliminarToken();
+            dispatch(logout());
+        } catch (error) {
+            console.error('Error al cerrar sesión:', error);
+        }
+    };
 
     return (
         <SafeAreaView style={commonStyles.containerScreen}>
             <View style={commonStyles.centeredContent}>
                 <View style={commonStyles.centeredHeader}>
-                    <UserRound
-                        size={65}
-                        color={colores.enfasis}
-                    />
+                    <UserRound size={65} color={colores.enfasis} />
 
-                    <Text style={commonStyles.title}>
-                        Mi Perfil
-                    </Text>
+                    <Text style={commonStyles.title}>Mi Perfil</Text>
 
                     <Text style={commonStyles.secondaryText}>
                         {autenticado
@@ -60,28 +44,17 @@ export default function PerfilScreen() {
 
                 {!autenticado ? (
                     <View style={commonStyles.card}>
-                        <Text style={commonStyles.cardTitle}>
-                            Invitado
-                        </Text>
+                        <Text style={commonStyles.cardTitle}>Invitado</Text>
 
                         <Text style={commonStyles.secondaryText}>
                             Inicia sesión para acceder a tu cuenta.
                         </Text>
 
                         <TouchableOpacity
-                            style={[
-                                commonStyles.button,
-                                commonStyles.profileButton,
-                            ]}
-                            onPress={() =>
-                                navigation.navigate('Login')
-                            }
+                            style={[commonStyles.button, commonStyles.profileButton]}
+                            onPress={() => navigation.navigate('Login')}
                         >
-                            <LogIn
-                                size={20}
-                                color={colores.negro}
-                            />
-
+                            <LogIn size={20} color={colores.negro} />
                             <Text style={commonStyles.buttonText}>
                                 Iniciar sesión
                             </Text>
@@ -118,26 +91,15 @@ export default function PerfilScreen() {
                         </Text>
 
                         <Text style={commonStyles.secondaryText}>
-                            Tipo de cuenta: {
-                                esPersonal ? 'Personal' : 'Cliente'
-                            }
+                            Tipo de cuenta: {esPersonal ? 'Personal' : 'Cliente'}
                         </Text>
 
                         {esPersonal && (
                             <TouchableOpacity
-                                style={[
-                                    commonStyles.button,
-                                    commonStyles.profileButton,
-                                ]}
-                                onPress={() =>
-                                    navigation.navigate('Home')
-                                }
+                                style={[commonStyles.button, commonStyles.profileButton]}
+                                onPress={() => navigation.navigate('Home')}
                             >
-                                <ShieldCheck
-                                    size={20}
-                                    color={colores.negro}
-                                />
-
+                                <ShieldCheck size={20} color={colores.negro} />
                                 <Text style={commonStyles.buttonText}>
                                     Acceso administrativo
                                 </Text>
@@ -152,11 +114,7 @@ export default function PerfilScreen() {
                             ]}
                             onPress={cerrarSesion}
                         >
-                            <LogOut
-                                size={20}
-                                color={colores.blanco}
-                            />
-
+                            <LogOut size={20} color={colores.blanco} />
                             <Text style={commonStyles.dangerButtonText}>
                                 Cerrar sesión
                             </Text>

@@ -1,12 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-    persistStore,
-    persistReducer,
-    createTransform,
-    type PersistConfig,
-} from 'redux-persist';
-
+import { persistStore, persistReducer, createTransform, type PersistConfig, } from 'redux-persist';
 import rootReducer from './rootReducer';
 import type { AuthState } from '../types/AuthState';
 
@@ -14,12 +8,13 @@ const authTransform = createTransform<AuthState, AuthState>(
     (inboundState) => ({
         ...inboundState,
         token: null,
+        autenticado: false,
+        accesoPersonalAutorizado: false,
     }),
     (outboundState) => ({
         ...outboundState,
-        autenticado: false,
-        usuario: null,
         token: null,
+        autenticado: false,
         accesoPersonalAutorizado: false,
     }),
     { whitelist: ['auth'] }
@@ -30,6 +25,7 @@ const persistConfig: PersistConfig<
 > = {
     key: 'root',
     storage: AsyncStorage,
+    whitelist: ['auth', 'venta'],
     transforms: [authTransform],
 };
 
@@ -40,7 +36,7 @@ const persistedReducer = persistReducer(
 
 export const store = configureStore({
     reducer: persistedReducer,
-    middleware: (getDefaultMiddleware) =>
+    middleware: getDefaultMiddleware =>
         getDefaultMiddleware({
             serializableCheck: false,
             immutableCheck: false,

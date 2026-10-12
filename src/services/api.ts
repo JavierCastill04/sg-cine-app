@@ -1,14 +1,6 @@
+import { obtenerToken } from './secureStorage';
 
-const API_URL =
-    process.env.EXPO_PUBLIC_API_URL ??
-    'https://sgcine.up.railway.app';
-
-// Token JWT almacenado temporalmente en memoria.
-let authToken: string | null = null;
-
-export const establecerToken = (token: string | null): void => {
-    authToken = token;
-};
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://sgcine.up.railway.app';
 
 export class ApiError extends Error {
     status: number;
@@ -18,9 +10,7 @@ export class ApiError extends Error {
         const message =
             typeof data === 'string'
                 ? data
-                : data &&
-                    typeof data === 'object' &&
-                    'message' in data
+                : data && typeof data === 'object' && 'message' in data
                     ? String(data.message)
                     : `Error HTTP ${status}`;
 
@@ -37,7 +27,11 @@ const request = async <T>(
     body?: unknown,
     requiereAuth = false
 ): Promise<T> => {
-    if (requiereAuth && !authToken) {
+    const token = requiereAuth
+        ? await obtenerToken()
+        : null;
+
+    if (requiereAuth && !token) {
         throw new Error(
             'Debes iniciar sesión para realizar esta operación.'
         );
@@ -47,8 +41,8 @@ const request = async <T>(
         'Content-Type': 'application/json',
     };
 
-    if (requiereAuth && authToken) {
-        headers.Authorization = `Bearer ${authToken}`;
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
     }
 
     let response: Response;
@@ -57,10 +51,9 @@ const request = async <T>(
         response = await fetch(`${API_URL}${url}`, {
             method,
             headers,
-            body:
-                body !== undefined
-                    ? JSON.stringify(body)
-                    : undefined,
+            body: body !== undefined
+                ? JSON.stringify(body)
+                : undefined,
         });
     } catch {
         throw new Error(
@@ -69,7 +62,6 @@ const request = async <T>(
     }
 
     const text = await response.text();
-
     let data: unknown = null;
 
     if (text) {
@@ -91,35 +83,15 @@ export const api = {
     get: <T>(url: string, requiereAuth = false) =>
         request<T>('GET', url, undefined, requiereAuth),
 
-    post: <T>(
-        url: string,
-        data: unknown,
-        requiereAuth = false
-    ) =>
+    post: <T>(url: string, data: unknown, requiereAuth = false) =>
         request<T>('POST', url, data, requiereAuth),
 
-    put: <T>(
-        url: string,
-        data: unknown,
-        requiereAuth = false
-    ) =>
+    put: <T>(url: string, data: unknown, requiereAuth = false) =>
         request<T>('PUT', url, data, requiereAuth),
 
-    patch: <T>(
-        url: string,
-        data: unknown,
-        requiereAuth = false
-    ) =>
+    patch: <T>(url: string, data: unknown, requiereAuth = false) =>
         request<T>('PATCH', url, data, requiereAuth),
 
-    delete: <T = void>(
-        url: string,
-        requiereAuth = false
-    ) =>
-        request<T>(
-            'DELETE',
-            url,
-            undefined,
-            requiereAuth
-        ),
+    delete: <T = void>(url: string, requiereAuth = false) =>
+        request<T>('DELETE', url, undefined, requiereAuth),
 };

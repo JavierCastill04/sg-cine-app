@@ -1,38 +1,54 @@
-import { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, TouchableOpacity, Alert } from 'react-native';
 import { Plus } from 'lucide-react-native';
 import type { Sala } from '../../../types/Sala';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
-import { addSala, updateSala, removeSala } from '../../../redux/slices/salaSlice';
-import { commonStyles, colores, } from '../../../theme';
+import { commonStyles } from '../../../theme';
+import { cargarCines } from '../../../redux/thunks/cineThunks';
+import { cargarSalas, crearSalaThunk, actualizarSalaThunk, eliminarSalaThunk, } from '../../../redux/thunks/salaThunks';
 import SalaList from '../components/SalasList';
 import SalaModal from '../components/SalaModal';
 
 export default function SalasScreen() {
-
     const dispatch = useAppDispatch();
+
     const salas = useAppSelector(state => state.sala);
     const funciones = useAppSelector(state => state.funcion);
+    const cines = useAppSelector(state => state.cine.lista);
     const [modalVisible, setModalVisible] = useState(false);
     const [salaSeleccionada, setSalaSeleccionada] = useState<Sala | undefined>(undefined);
 
-    const salasOrdenadas = [...salas].sort(
-        (a, b) =>
-            a.nombre.localeCompare(
-                b.nombre,
-                undefined,
-                { numeric: true }
-            )
+    useEffect(() => {
+        dispatch(cargarCines());
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (cines.length > 0) {
+            dispatch(cargarSalas());
+        }
+    }, [dispatch, cines.length]);
+
+    const salasOrdenadas = [...salas].sort((a, b) =>
+        a.nombre.localeCompare(b.nombre, undefined, { numeric: true })
     );
 
     const agregarSala = () => {
+        if (cines.length === 0) {
+            Alert.alert(
+                'Sin cines disponibles',
+                'No hay cines cargados. Verifica que existan cines antes de crear una sala.'
+            );
+            return;
+        }
+
         setSalaSeleccionada(undefined);
         setModalVisible(true);
     };
 
     const editarSala = (sala: Sala) => {
-
-        const estaEnFuncion = funciones.some(funcion => funcion.salaId === sala.id);
+        const estaEnFuncion = funciones.some(
+            funcion => funcion.salaId === sala.id
+        );
 
         if (estaEnFuncion) {
             Alert.alert(
@@ -47,8 +63,9 @@ export default function SalasScreen() {
     };
 
     const eliminarSala = (sala: Sala) => {
-
-        const estaEnFuncion = funciones.some(funcion => funcion.salaId === sala.id);
+        const estaEnFuncion = funciones.some(
+            funcion => funcion.salaId === sala.id
+        );
 
         if (estaEnFuncion) {
             Alert.alert(
@@ -69,30 +86,54 @@ export default function SalasScreen() {
                 {
                     text: 'Eliminar',
                     style: 'destructive',
-
-                    onPress: () => {
-                        dispatch(removeSala(sala.id));
+                    onPress: async () => {
+                        try {
+                            await dispatch(eliminarSalaThunk(sala.id)).unwrap();
+                        } catch (error) {
+                            Alert.alert(
+                                'Error',
+                                typeof error === 'string'
+                                    ? error
+                                    : 'No se pudo eliminar la sala.'
+                            );
+                        }
                     },
                 },
             ]
         );
     };
 
-    const guardarSala = (datos: Omit<Sala, 'id' | 'asientos'>) => {
-        if (salaSeleccionada) {
-            dispatch(
-                updateSala({
-                    ...salaSeleccionada,
-                    ...datos,
-                })
+    const guardarSala = async (
+        datos: Omit<Sala, 'id' | 'asientos'>
+    ) => {
+        const solicitud = {
+            cine_id: datos.cineId,
+            nombre: datos.nombre,
+            filas: datos.capacidad.filas,
+            columnas: datos.capacidad.columnas,
+        };
+
+        try {
+            if (salaSeleccionada) {
+                await dispatch(
+                    actualizarSalaThunk({
+                        id: salaSeleccionada.id,
+                        datos: solicitud,
+                    })
+                ).unwrap();
+            } else {
+                await dispatch(crearSalaThunk(solicitud)).unwrap();
+            }
+
+            cerrarModal();
+        } catch (error) {
+            Alert.alert(
+                'Error',
+                typeof error === 'string'
+                    ? error
+                    : 'No se pudo guardar la sala.'
             );
         }
-        else {
-            dispatch(
-                addSala(datos)
-            );
-        }
-        cerrarModal();
     };
 
     const cerrarModal = () => {
@@ -108,7 +149,10 @@ export default function SalasScreen() {
                 onEliminar={eliminarSala}
             />
 
-            <TouchableOpacity style={commonStyles.floatingButton} onPress={agregarSala}  >
+            <TouchableOpacity
+                style={commonStyles.floatingButton}
+                onPress={agregarSala}
+            >
                 <Plus size={40} />
             </TouchableOpacity>
 
