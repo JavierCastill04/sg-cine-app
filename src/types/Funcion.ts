@@ -1,4 +1,5 @@
-import { EstadoAsiento } from "./EstadoAsiento";
+import type { EstadoAsiento } from './EstadoAsiento';
+
 export interface Funcion {
     id: number;
     peliculaId: number;
@@ -6,4 +7,5 @@ export interface Funcion {
     fecha: string;
     horaInicio: string;
     estadoAsientos: EstadoAsiento[];
+    estado?: 'activa' | 'cancelada';
 }

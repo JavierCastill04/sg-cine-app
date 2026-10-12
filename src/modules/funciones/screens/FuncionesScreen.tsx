@@ -1,25 +1,48 @@
-import { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { useCallback, useState } from 'react';
+import { View, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { Plus } from 'lucide-react-native';
 import type { Funcion } from '../../../types/Funcion';
-import type { EstadoAsiento } from '../../../types/EstadoAsiento';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
-import { addFuncion, updateFuncion, removeFuncion, } from '../../../redux/slices/funcionSlice';
-import { commonStyles, colores, } from '../../../theme';
+import { cargarFunciones, crearFuncionThunk, reprogramarFuncionThunk, cancelarFuncionThunk } from '../../../redux/thunks/funcionThunks';
+import { cargarPeliculas } from '../../../redux/thunks/peliculaThunks';
+import { cargarSalas } from '../../../redux/thunks/salaThunks';
+import { commonStyles, colores } from '../../../theme';
+import { useCargaPantalla } from '../../../hooks/useCargaPantalla';
+import EstadoPantalla from '../../../components/estadoPantalla/EstadoPantalla';
 import FuncionList from '../components/FuncionesList';
 import FuncionFormModal from '../components/FuncionModal';
 import FuncionDetalleModal from '../components/FuncionDetalleModal';
 
 export default function FuncionesScreen() {
-
     const dispatch = useAppDispatch();
+
     const funciones = useAppSelector(state => state.funcion);
-    const peliculas = useAppSelector(state => state.pelicula);
+    const peliculas = useAppSelector(state => state.pelicula.lista);
     const salas = useAppSelector(state => state.sala);
+
     const [modalVisible, setModalVisible] = useState(false);
-    const [funcionSeleccionada, setFuncionSeleccionada,] = useState<Funcion | undefined>(undefined);
-    const [detalleVisible, setDetalleVisible,] = useState(false);
-    const [funcionDetalle, setFuncionDetalle,] = useState<Funcion | undefined>(undefined);
+    const [funcionSeleccionada, setFuncionSeleccionada] =
+        useState<Funcion | undefined>();
+    const [detalleVisible, setDetalleVisible] = useState(false);
+    const [funcionDetalle, setFuncionDetalle] =
+        useState<Funcion | undefined>();
+
+    const cargar = useCallback(async () => {
+        await Promise.all([
+            dispatch(cargarPeliculas()).unwrap(),
+            dispatch(cargarFunciones()).unwrap(),
+            dispatch(cargarSalas()).unwrap(),
+        ]);
+    }, [dispatch]);
+
+    const {
+        cargando,
+        actualizando,
+        error,
+        datosCargados,
+        actualizar,
+        reintentar,
+    } = useCargaPantalla({ cargar });
 
     const agregarFuncion = () => {
         setFuncionSeleccionada(undefined);
@@ -27,6 +50,14 @@ export default function FuncionesScreen() {
     };
 
     const editarFuncion = (funcion: Funcion) => {
+        if (funcion.estado === 'cancelada') {
+            Alert.alert(
+                'Función cancelada',
+                'No se puede reprogramar una función cancelada.'
+            );
+            return;
+        }
+
         setFuncionSeleccionada(funcion);
         setModalVisible(true);
     };
@@ -36,67 +67,80 @@ export default function FuncionesScreen() {
         setDetalleVisible(true);
     };
 
-    const eliminarFuncion = (funcion: Funcion) => {
+    const cancelarFuncion = (funcion: Funcion) => {
+        if (funcion.estado === 'cancelada') {
+            Alert.alert('Función cancelada', 'Esta función ya está cancelada.');
+            return;
+        }
+
         Alert.alert(
-            'Eliminar función',
-            `¿Seguro que deseas eliminar la función #${funcion.id}?`,
+            'Cancelar función',
+            `¿Seguro que deseas cancelar la función #${funcion.id}?`,
             [
+                { text: 'Volver', style: 'cancel' },
                 {
-                    text: 'Cancelar',
-                    style: 'cancel',
-                },
-                {
-                    text: 'Eliminar',
+                    text: 'Cancelar función',
                     style: 'destructive',
-                    onPress: () => {
-                        dispatch(
-                            removeFuncion(funcion.id)
-                        );
+                    onPress: async () => {
+                        try {
+                            const respuesta = await dispatch(
+                                cancelarFuncionThunk(funcion.id)
+                            ).unwrap();
+
+                            Alert.alert('Función cancelada', respuesta.message);
+                        } catch (error) {
+                            Alert.alert(
+                                'Error',
+                                typeof error === 'string'
+                                    ? error
+                                    : 'No se pudo cancelar la función.'
+                            );
+                        }
                     },
                 },
             ]
         );
     };
 
-    const guardarFuncion = (datos: Omit<Funcion, 'id' | 'estadoAsientos'>) => {
+    const guardarFuncion = async (
+        datos: Omit<Funcion, 'id' | 'estadoAsientos'>
+    ) => {
+        const horaInicio =
+            datos.horaInicio.length === 5
+                ? `${datos.horaInicio}:00`
+                : datos.horaInicio;
 
-        if (funcionSeleccionada) {
-            dispatch(
-                updateFuncion({
-                    ...funcionSeleccionada,
-                    ...datos,
-                })
-            );
-        }
+        const datosApi = {
+            peliculaId: datos.peliculaId,
+            salaId: datos.salaId,
+            fechaHora: `${datos.fecha} ${horaInicio}`,
+        };
 
-        else {
-            const sala = salas.find(sala => sala.id === datos.salaId);
+        try {
+            if (funcionSeleccionada) {
+                await dispatch(
+                    reprogramarFuncionThunk({
+                        id: funcionSeleccionada.id,
+                        datos: datosApi,
+                    })
+                ).unwrap();
 
-            if (!sala) {
-                Alert.alert(
-                    'Error',
-                    'No se encontró la sala seleccionada.'
-                );
-                return;
+                Alert.alert('Éxito', 'La función se reprogramó correctamente.');
+            } else {
+                await dispatch(crearFuncionThunk(datosApi)).unwrap();
+
+                Alert.alert('Éxito', 'La función se creó correctamente.');
             }
 
-            const estadoAsientos:
-                EstadoAsiento[] = sala.asientos.map(
-                    asiento => ({
-                        asientoId: asiento.id,
-                        estado: 'disponible',
-                    })
-                );
-
-            dispatch(
-                addFuncion({
-                    ...datos,
-                    estadoAsientos,
-                })
+            cerrarModal();
+        } catch (error) {
+            Alert.alert(
+                'Error',
+                typeof error === 'string'
+                    ? error
+                    : 'No se pudo guardar la función.'
             );
         }
-
-        cerrarModal();
     };
 
     const cerrarModal = () => {
@@ -110,37 +154,59 @@ export default function FuncionesScreen() {
     };
 
     return (
-        <View style={commonStyles.containerScreen}>
-            <FuncionList
-                funciones={funciones}
-                peliculas={peliculas}
-                salas={salas}
-                onVer={verFuncion}
-                onEditar={editarFuncion}
-                onEliminar={eliminarFuncion}
-            />
+        <EstadoPantalla
+            cargando={cargando}
+            error={error}
+            datosCargados={datosCargados}
+            onReintentar={reintentar}
+        >
+            <View style={commonStyles.containerScreen}>
+                <FuncionList
+                    funciones={funciones}
+                    peliculas={peliculas}
+                    salas={salas}
+                    onVer={verFuncion}
+                    onEditar={editarFuncion}
+                    onEliminar={cancelarFuncion}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={actualizando}
+                            onRefresh={actualizar}
+                            tintColor={colores.enfasis}
+                            colors={[colores.enfasis]}
+                        />
+                    }
+                />
 
-            <TouchableOpacity style={commonStyles.floatingButton} onPress={agregarFuncion}  >
-                <Plus size={40} />
-            </TouchableOpacity>
+                <TouchableOpacity
+                    style={commonStyles.floatingButton}
+                    onPress={agregarFuncion}
+                >
+                    <Plus size={40} />
+                </TouchableOpacity>
 
-            <FuncionFormModal
-                visible={modalVisible}
-                funcion={funcionSeleccionada}
-                funciones={funciones}
-                peliculas={peliculas}
-                salas={salas}
-                onClose={cerrarModal}
-                onGuardar={guardarFuncion}
-            />
+                <FuncionFormModal
+                    visible={modalVisible}
+                    funcion={funcionSeleccionada}
+                    funciones={funciones}
+                    peliculas={peliculas}
+                    salas={salas}
+                    onClose={cerrarModal}
+                    onGuardar={guardarFuncion}
+                />
 
-            <FuncionDetalleModal
-                visible={detalleVisible}
-                funcion={funcionDetalle}
-                pelicula={peliculas.find(pelicula => pelicula.id === funcionDetalle?.peliculaId)}
-                sala={salas.find(sala => sala.id === funcionDetalle?.salaId)}
-                onClose={cerrarDetalle}
-            />
-        </View>
+                <FuncionDetalleModal
+                    visible={detalleVisible}
+                    funcion={funcionDetalle}
+                    pelicula={peliculas.find(
+                        pelicula => pelicula.id === funcionDetalle?.peliculaId
+                    )}
+                    sala={salas.find(
+                        sala => sala.id === funcionDetalle?.salaId
+                    )}
+                    onClose={cerrarDetalle}
+                />
+            </View>
+        </EstadoPantalla>
     );
 }

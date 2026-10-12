@@ -1,45 +1,78 @@
 import { useMemo, useState, useCallback } from 'react';
-import { FlatList, Text, View } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { FlatList, RefreshControl, Text, View } from 'react-native';
 import { useAppSelector, useAppDispatch } from '../../../redux/hooks';
 import { cargarPeliculas } from '../../../redux/thunks/peliculaThunks';
+import { cargarFunciones } from '../../../redux/thunks/funcionThunks';
 import type { Pelicula } from '../../../types/Pelicula';
+import { useCargaPantalla } from '../../../hooks/useCargaPantalla';
 import Filtros from '../../../components/filtro/Filtros';
+import EstadoPantalla from '../../../components/estadoPantalla/EstadoPantalla';
 import CarteleraCard from '../components/CarteleraCard';
 import CarteleraSlider from '../components/CarteleraSlider';
 import CarteleraModal from '../components/CarteleraModal';
-import { commonStyles } from '../../../theme';
+import { commonStyles, colores } from '../../../theme';
 
 export default function CarteleraScreen() {
     const dispatch = useAppDispatch();
 
-    const [peliculaSeleccionada, setPeliculaSeleccionada] = useState<Pelicula | null>(null);
+    const [peliculaSeleccionada, setPeliculaSeleccionada] =
+        useState<Pelicula | null>(null);
     const [busqueda, setBusqueda] = useState('');
     const [generoSeleccionado, setGeneroSeleccionado] = useState('');
-    const [clasificacionSeleccionada, setClasificacionSeleccionada] = useState('');
-    const [salaSeleccionada, setSalaSeleccionada] = useState<number | null>(null);
-    const [estadoSeleccionado, setEstadoSeleccionado] = useState<'todos' | 'disponible' | 'noDisponible'>('disponible');
+    const [clasificacionSeleccionada, setClasificacionSeleccionada] =
+        useState('');
+    const [salaSeleccionada, setSalaSeleccionada] = useState<number | null>(
+        null
+    );
+    const [estadoSeleccionado, setEstadoSeleccionado] = useState<
+        'todos' | 'disponible' | 'noDisponible'
+    >('disponible');
+
     const peliculas = useAppSelector(state => state.pelicula.lista);
     const funciones = useAppSelector(state => state.funcion);
     const salas = useAppSelector(state => state.sala);
 
-    useFocusEffect(
-        useCallback(() => {
-            dispatch(cargarPeliculas());
-        }, [dispatch])
+    const cargar = useCallback(async () => {
+        await Promise.all([
+            dispatch(cargarPeliculas()).unwrap(),
+            dispatch(cargarFunciones()).unwrap(),
+        ]);
+    }, [dispatch]);
+
+    const {
+        cargando,
+        actualizando,
+        error,
+        datosCargados,
+        actualizar,
+        reintentar,
+    } = useCargaPantalla({ cargar });
+
+    const peliculasConFunciones = useMemo(
+        () =>
+            peliculas.filter(pelicula =>
+                funciones.some(
+                    funcion =>
+                        funcion.peliculaId === pelicula.id &&
+                        funcion.estado !== 'cancelada'
+                )
+            ),
+        [peliculas, funciones]
     );
 
-    const peliculasConFunciones = peliculas.filter(pelicula =>
-        funciones.some(funcion => funcion.peliculaId === pelicula.id)
+    const peliculasDestacadas = useMemo(
+        () =>
+            peliculas.filter(pelicula => {
+                const numFunciones = funciones.filter(
+                    funcion =>
+                        funcion.peliculaId === pelicula.id &&
+                        funcion.estado !== 'cancelada'
+                ).length;
+
+                return numFunciones > 3;
+            }),
+        [peliculas, funciones]
     );
-
-    const peliculasDestacadas = peliculas.filter(pelicula => {
-        const numFunciones = funciones.filter(
-            funcion => funcion.peliculaId === pelicula.id
-        ).length;
-
-        return numFunciones > 3;
-    });
 
     const generos = useMemo(
         () => [...new Set(peliculas.map(pelicula => pelicula.genero))],
@@ -48,20 +81,25 @@ export default function CarteleraScreen() {
 
     const clasificaciones = useMemo(
         () => [
-            ...new Set(
-                peliculas.map(pelicula => pelicula.clasificacion)
-            ),
+            ...new Set(peliculas.map(pelicula => pelicula.clasificacion)),
         ],
         [peliculas]
     );
 
-    const obtenerSalasDePelicula = (peliculaId: number) => {
-        const salaIds = funciones
-            .filter(funcion => funcion.peliculaId === peliculaId)
-            .map(funcion => funcion.salaId);
+    const obtenerSalasDePelicula = useCallback(
+        (peliculaId: number) => {
+            const salaIds = funciones
+                .filter(
+                    funcion =>
+                        funcion.peliculaId === peliculaId &&
+                        funcion.estado !== 'cancelada'
+                )
+                .map(funcion => funcion.salaId);
 
-        return salas.filter(sala => salaIds.includes(sala.id));
-    };
+            return salas.filter(sala => salaIds.includes(sala.id));
+        },
+        [funciones, salas]
+    );
 
     const peliculasFiltradas = useMemo(() => {
         const texto = busqueda.trim().toLowerCase();
@@ -112,8 +150,7 @@ export default function CarteleraScreen() {
         clasificacionSeleccionada,
         salaSeleccionada,
         estadoSeleccionado,
-        funciones,
-        salas,
+        obtenerSalasDePelicula,
     ]);
 
     const abrirFunciones = (pelicula: Pelicula) => {
@@ -125,61 +162,80 @@ export default function CarteleraScreen() {
     };
 
     return (
-        <View style={commonStyles.containerScreen}>
-            <FlatList
-                data={peliculasFiltradas}
-                keyExtractor={item => item.id.toString()}
-                renderItem={({ item }) => (
-                    <CarteleraCard
-                        pelicula={item}
-                        onVerFunciones={abrirFunciones}
-                    />
-                )}
-                ListHeaderComponent={
-                    <>
-                        <CarteleraSlider
-                            peliculasDestacadas={peliculasDestacadas}
+        <EstadoPantalla
+            cargando={cargando}
+            error={error}
+            datosCargados={datosCargados}
+            onReintentar={reintentar}
+        >
+            <View style={commonStyles.containerScreen}>
+                <FlatList
+                    data={peliculasFiltradas}
+                    keyExtractor={item => item.id.toString()}
+                    renderItem={({ item }) => (
+                        <CarteleraCard
+                            pelicula={item}
                             onVerFunciones={abrirFunciones}
                         />
-
-                        <Filtros
-                            busqueda={busqueda}
-                            onBusquedaChange={setBusqueda}
-                            generoSeleccionado={generoSeleccionado}
-                            onGeneroChange={setGeneroSeleccionado}
-                            clasificacionSeleccionada={clasificacionSeleccionada}
-                            onClasificacionChange={setClasificacionSeleccionada}
-                            salaSeleccionada={salaSeleccionada}
-                            onSalaChange={setSalaSeleccionada}
-                            estadoSeleccionado={estadoSeleccionado}
-                            onEstadoChange={setEstadoSeleccionado}
-                            generos={generos}
-                            clasificaciones={clasificaciones}
-                            salas={salas.map(sala => ({
-                                id: sala.id,
-                                nombre: sala.nombre,
-                            }))}
+                    )}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={actualizando}
+                            onRefresh={actualizar}
+                            tintColor={colores.enfasis}
+                            colors={[colores.enfasis]}
                         />
-                    </>
-                }
-                ListEmptyComponent={
-                    <Text
-                        style={[
-                            commonStyles.text,
-                            { textAlign: 'center', marginTop: 20 },
-                        ]}
-                    >
-                        No se encontraron películas con los filtros seleccionados.
-                    </Text>
-                }
-                showsVerticalScrollIndicator={false}
-            />
+                    }
+                    ListHeaderComponent={
+                        <>
+                            <CarteleraSlider
+                                peliculasDestacadas={peliculasDestacadas}
+                                onVerFunciones={abrirFunciones}
+                            />
+                            <Filtros
+                                busqueda={busqueda}
+                                onBusquedaChange={setBusqueda}
+                                generoSeleccionado={generoSeleccionado}
+                                onGeneroChange={setGeneroSeleccionado}
+                                clasificacionSeleccionada={
+                                    clasificacionSeleccionada
+                                }
+                                onClasificacionChange={
+                                    setClasificacionSeleccionada
+                                }
+                                salaSeleccionada={salaSeleccionada}
+                                onSalaChange={setSalaSeleccionada}
+                                estadoSeleccionado={estadoSeleccionado}
+                                onEstadoChange={setEstadoSeleccionado}
+                                generos={generos}
+                                clasificaciones={clasificaciones}
+                                salas={salas.map(sala => ({
+                                    id: sala.id,
+                                    nombre: sala.nombre,
+                                }))}
+                            />
+                        </>
+                    }
+                    ListEmptyComponent={
+                        <Text
+                            style={[
+                                commonStyles.text,
+                                { textAlign: 'center', marginTop: 20 },
+                            ]}
+                        >
+                            No se encontraron películas con los filtros
+                            seleccionados.
+                        </Text>
+                    }
+                    showsVerticalScrollIndicator={false}
+                />
 
-            <CarteleraModal
-                visible={peliculaSeleccionada !== null}
-                pelicula={peliculaSeleccionada}
-                onClose={cerrarFunciones}
-            />
-        </View>
+                <CarteleraModal
+                    visible={peliculaSeleccionada !== null}
+                    pelicula={peliculaSeleccionada}
+                    onClose={cerrarFunciones}
+                />
+            </View>
+        </EstadoPantalla>
     );
 }

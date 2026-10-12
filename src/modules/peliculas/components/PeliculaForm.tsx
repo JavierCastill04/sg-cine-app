@@ -11,14 +11,15 @@ const generos = [
     "Romance",
     "Comedia",
     "Aventura",
-    "Ciencia Ficción",
+    "Ciencia ficción",
 ];
 
 const clasificaciones = [
     "Todo público",
-    "12+",
-    "15+",
-    "18+",
+    "+13",
+    "+16",
+    "+18",
+    "TP"
 ];
 
 interface PeliculaFormProps {

@@ -1,15 +1,16 @@
 import { FlatList } from 'react-native';
-
+import type { ReactElement } from 'react';
+import type { RefreshControlProps } from 'react-native';
 import type { Funcion } from '../../../types/Funcion';
 import type { Pelicula } from '../../../types/Pelicula';
 import type { Sala } from '../../../types/Sala';
-
 import FuncionesCard from './FuncionesCard';
 
 interface FuncionListProps {
     funciones: Funcion[];
     peliculas: Pelicula[];
     salas: Sala[];
+    refreshControl?: ReactElement<RefreshControlProps>;
     onVer: (funcion: Funcion) => void;
     onEditar: (funcion: Funcion) => void;
     onEliminar: (funcion: Funcion) => void;
@@ -19,6 +20,7 @@ export default function FuncionList({
     funciones,
     peliculas,
     salas,
+    refreshControl,
     onVer,
     onEditar,
     onEliminar,
@@ -37,6 +39,7 @@ export default function FuncionList({
                     onEliminar={onEliminar}
                 />
             )}
+            refreshControl={refreshControl}
         />
     );
 }
