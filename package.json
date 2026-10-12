@@ -15,6 +15,7 @@
     "expo-crypto": "~57.0.3",
     "expo-dev-client": "~57.0.19",
     "expo-local-authentication": "~57.0.3",
+    "expo-location": "~57.0.20",
     "expo-mail-composer": "~57.0.2",
     "expo-print": "~57.0.2",
     "expo-sharing": "~57.0.22",
@@ -28,6 +29,7 @@
     "react-native-screens": "~4.26.0",
     "react-native-svg": "15.15.4",
     "react-native-toast-message": "^2.5.0",
+    "react-native-webview": "13.16.1",
     "react-redux": "^9.3.0",
     "redux-persist": "^6.0.0"
   },

@@ -390,4 +390,57 @@ cinesDescription: {
     textAlign: 'center',
 },
     
+    cinesLista: {
+        paddingHorizontal: espaciado.lg,
+        paddingBottom: espaciado.xl,
+        gap: espaciado.md,
+    },
+
+    cinesCard: {
+        backgroundColor: colores.secundario,
+        borderRadius: layout.radius,
+        padding: espaciado.lg,
+        borderLeftWidth: 4,
+        borderLeftColor: colores.enfasis,
+    },
+
+    cinesNombre: {
+        ...tipografia.heading,
+        color: colores.enfasis,
+        marginBottom: espaciado.sm,
+    },
+
+    cinesDireccion: {
+        ...tipografia.body,
+        color: colores.claro,
+    },
+
+    cinesEstadoContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: espaciado.lg,
+    },
+    
+cinesMapaContenedor: {
+    height: 280,
+    marginHorizontal: espaciado.lg,
+    marginBottom: espaciado.lg,
+    borderRadius: layout.radius,
+    overflow: 'hidden',
+    backgroundColor: colores.secundario,
+},
+
+cinesMapaWebView: {
+    flex: 1,
+    backgroundColor: colores.secundario,
+},
+
+cinesDistancia: {
+    ...tipografia.body,
+    color: colores.enfasis,
+    marginTop: espaciado.sm,
+    fontWeight: '600',
+},
+
 });
