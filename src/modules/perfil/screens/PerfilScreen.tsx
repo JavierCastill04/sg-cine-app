@@ -13,6 +13,7 @@ import {
     LogIn,
     LogOut,
     ShieldCheck,
+    UserPlus,
 } from 'lucide-react-native';
 
 import type { RootStackParamList } from '../../../navigation/types';
@@ -85,6 +86,26 @@ export default function PerfilScreen() {
                                 Iniciar sesión
                             </Text>
                         </TouchableOpacity>
+                        
+<TouchableOpacity
+    style={[
+        commonStyles.button,
+        commonStyles.profileButton,
+    ]}
+    onPress={() => navigation.navigate('Registro')}
+    accessibilityRole="button"
+    accessibilityLabel="Crear una cuenta"
+>
+    <UserPlus
+        size={20}
+        color={colores.negro}
+    />
+
+    <Text style={commonStyles.buttonText}>
+        Crear una cuenta
+    </Text>
+</TouchableOpacity>
+
                     </View>
                 ) : (
                     <View style={commonStyles.card}>
