@@ -87,7 +87,7 @@ export default function PerfilScreen() {
                         </Text>
 
                         <Text style={commonStyles.secondaryText}>
-                            Usuario: {usuario?.usuario}
+                            Usuario: {usuario?.correo}
                         </Text>
 
                         <Text style={commonStyles.secondaryText}>
