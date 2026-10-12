@@ -1,30 +1,18 @@
-
 import { useEffect, useMemo, useState } from 'react';
-import {
-    ActivityIndicator,
-    FlatList,
-    Text,
-    View,
-} from 'react-native';
+import { ActivityIndicator, FlatList, Text, View, } from 'react-native';
 import * as Location from 'expo-location';
-
+import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
+import { cargarCines } from '../../../redux/thunks/cineThunks';
 import { commonStyles } from '../../../theme';
-import {
-    cinesService,
-    type Cine,
-} from '../../../services/cines.service';
-
 import CinesMapa from '../components/CinesMapa';
-import {
-    ordenarCinesPorDistancia,
-    type Ubicacion,
-    type CineConDistancia,
-} from '../utils/distancia';
+import { ordenarCinesPorDistancia, type Ubicacion, type CineConDistancia, } from '../utils/distancia';
 
 export default function CinesScreen() {
-    const [cines, setCines] = useState<Cine[]>([]);
-    const [cargando, setCargando] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const dispatch = useAppDispatch();
+
+    const cines = useAppSelector(state => state.cine.lista);
+    const cargando = useAppSelector(state => state.cine.cargando);
+    const error = useAppSelector(state => state.cine.error);
 
     const [ubicacionUsuario, setUbicacionUsuario] =
         useState<Ubicacion | null>(null);
@@ -33,37 +21,8 @@ export default function CinesScreen() {
         useState<string | null>(null);
 
     useEffect(() => {
-        let activo = true;
-
-        const cargarDatos = async () => {
-            try {
-                const resultado = await cinesService.listar();
-
-                if (activo) {
-                    setCines(resultado);
-                    setError(null);
-                }
-            } catch (err) {
-                console.error('Error al cargar cines:', err);
-
-                if (activo) {
-                    setError(
-                        'No se pudieron cargar los cines. Verifica la conexión con la API.'
-                    );
-                }
-            } finally {
-                if (activo) {
-                    setCargando(false);
-                }
-            }
-        };
-
-        cargarDatos();
-
-        return () => {
-            activo = false;
-        };
-    }, []);
+        dispatch(cargarCines());
+    }, [dispatch]);
 
     useEffect(() => {
         let activo = true;
@@ -82,10 +41,9 @@ export default function CinesScreen() {
                     return;
                 }
 
-                const posicion =
-                    await Location.getCurrentPositionAsync({
-                        accuracy: Location.Accuracy.Balanced,
-                    });
+                const posicion = await Location.getCurrentPositionAsync({
+                    accuracy: Location.Accuracy.Balanced,
+                });
 
                 if (activo) {
                     setUbicacionUsuario({
@@ -95,10 +53,7 @@ export default function CinesScreen() {
                     setMensajeUbicacion(null);
                 }
             } catch (err) {
-                console.error(
-                    'Error al obtener ubicación:',
-                    err
-                );
+                console.error('Error al obtener ubicación:', err);
 
                 if (activo) {
                     setMensajeUbicacion(
@@ -117,23 +72,16 @@ export default function CinesScreen() {
 
     const cinesOrdenados = useMemo<CineConDistancia[]>(() => {
         if (!ubicacionUsuario) {
-            return cines.map((cine) => ({
+            return cines.map(cine => ({
                 ...cine,
                 distanciaKm: null,
             }));
         }
 
-        return ordenarCinesPorDistancia(
-            cines,
-            ubicacionUsuario
-        );
+        return ordenarCinesPorDistancia(cines, ubicacionUsuario);
     }, [cines, ubicacionUsuario]);
 
-    const renderCine = ({
-        item,
-    }: {
-        item: CineConDistancia;
-    }) => (
+    const renderCine = ({ item }: { item: CineConDistancia }) => (
         <View style={commonStyles.cinesCard}>
             <Text style={commonStyles.cinesNombre}>
                 {item.nombre}
@@ -156,7 +104,6 @@ export default function CinesScreen() {
             {cargando ? (
                 <View style={commonStyles.cinesEstadoContainer}>
                     <ActivityIndicator size="large" />
-
                     <Text style={commonStyles.cinesDescription}>
                         Cargando cines...
                     </Text>
@@ -170,7 +117,7 @@ export default function CinesScreen() {
             ) : (
                 <FlatList
                     data={cinesOrdenados}
-                    keyExtractor={(item) => String(item.id)}
+                    keyExtractor={item => String(item.id)}
                     renderItem={renderCine}
                     contentContainerStyle={commonStyles.cinesLista}
                     ListHeaderComponent={
@@ -180,22 +127,16 @@ export default function CinesScreen() {
                             </Text>
 
                             {mensajeUbicacion && (
-                                <Text
-                                    style={
-                                        commonStyles.cinesDescription
-                                    }
-                                >
+                                <Text style={commonStyles.cinesDescription}>
                                     {mensajeUbicacion}
                                 </Text>
                             )}
 
-                            <View
-                                style={
-                                    commonStyles.cinesMapaContenedor
-                                }
-                            >
-                                <CinesMapa cines={cines}
-                                ubicacionUsuario={ubicacionUsuario} />
+                            <View style={commonStyles.cinesMapaContenedor}>
+                                <CinesMapa
+                                    cines={cines}
+                                    ubicacionUsuario={ubicacionUsuario}
+                                />
                             </View>
                         </View>
                     }
@@ -204,6 +145,7 @@ export default function CinesScreen() {
                             No hay cines disponibles.
                         </Text>
                     }
+                    showsVerticalScrollIndicator={false}
                 />
             )}
         </View>
