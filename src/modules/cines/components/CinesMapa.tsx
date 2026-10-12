@@ -1,24 +1,26 @@
-
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { WebView } from 'react-native-webview';
 
 import { commonStyles } from '../../../theme';
 import type { Cine } from '../../../services/cines.service';
-
 import type { Ubicacion } from '../utils/distancia';
 
 interface CinesMapaProps {
     cines: Cine[];
     ubicacionUsuario: Ubicacion | null;
+    restablecerEncuadre: number;
 }
 
 export default function CinesMapa({
     cines,
     ubicacionUsuario,
+    restablecerEncuadre,
 }: CinesMapaProps) {
+    const mapaRef = useRef<WebView>(null);
+
     const html = useMemo(() => {
         const ubicaciones = cines
-            .map((cine) => ({
+            .map(cine => ({
                 id: cine.id,
                 nombre: cine.nombre,
                 direccion: cine.direccion,
@@ -26,7 +28,7 @@ export default function CinesMapa({
                 longitud: Number(cine.longitud),
             }))
             .filter(
-                (cine) =>
+                cine =>
                     Number.isFinite(cine.latitud) &&
                     Number.isFinite(cine.longitud) &&
                     cine.latitud >= -90 &&
@@ -39,7 +41,9 @@ export default function CinesMapa({
             /</g,
             '\\u003c'
         );
-const datosUsuario = JSON.stringify(ubicacionUsuario);
+
+        const datosUsuario = JSON.stringify(ubicacionUsuario);
+
         return `
 <!DOCTYPE html>
 <html lang="es">
@@ -73,6 +77,7 @@ const datosUsuario = JSON.stringify(ubicacionUsuario);
     <script>
         const cines = ${datos};
         const usuario = ${datosUsuario};
+
         const mapa = L.map('map').setView(
             [13.6929, -89.2182],
             11
@@ -82,14 +87,13 @@ const datosUsuario = JSON.stringify(ubicacionUsuario);
             'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
             {
                 maxZoom: 19,
-                attribution:
-                    '&copy; OpenStreetMap contributors'
+                attribution: '&copy; OpenStreetMap contributors'
             }
         ).addTo(mapa);
 
         const limites = [];
 
-        cines.forEach((cine) => {
+        cines.forEach(cine => {
             const posicion = [
                 cine.latitud,
                 cine.longitud
@@ -110,45 +114,78 @@ const datosUsuario = JSON.stringify(ubicacionUsuario);
             marcador.bindPopup(contenido);
             limites.push(posicion);
         });
+
         if (usuario) {
-    const posicionUsuario = [
-        usuario.latitud,
-        usuario.longitud
-    ];
+            const posicionUsuario = [
+                usuario.latitud,
+                usuario.longitud
+            ];
 
-    L.circleMarker(posicionUsuario, {
-        radius: 9,
-        color: '#ffffff',
-        weight: 3,
-        fillColor: '#2563eb',
-        fillOpacity: 1
-    })
-        .addTo(mapa)
-        .bindPopup('Tu ubicación actual');
+            L.circleMarker(posicionUsuario, {
+                radius: 9,
+                color: '#ffffff',
+                weight: 3,
+                fillColor: '#2563eb',
+                fillOpacity: 1
+            })
+                .addTo(mapa)
+                .bindPopup('Tu ubicación actual');
 
-    limites.push(posicionUsuario);
-}
-        if (limites.length > 0) {
-            mapa.fitBounds(limites, {
-                padding: [30, 30],
-                maxZoom: 13
-            });
+            limites.push(posicionUsuario);
         }
+
+        function restablecerEncuadre() {
+            if (limites.length > 0) {
+                mapa.fitBounds(limites, {
+                    padding: [30, 30],
+                    maxZoom: 13
+                });
+            } else {
+                mapa.setView([13.6929, -89.2182], 11);
+            }
+        }
+
+        restablecerEncuadre();
+
+        window.addEventListener('message', event => {
+            if (event.data === 'restablecerEncuadre') {
+                restablecerEncuadre();
+            }
+        });
+
+        document.addEventListener('message', event => {
+            if (event.data === 'restablecerEncuadre') {
+                restablecerEncuadre();
+            }
+        });
     </script>
 </body>
 </html>
         `;
     }, [cines, ubicacionUsuario]);
 
+    useEffect(() => {
+        if (restablecerEncuadre > 0) {
+            mapaRef.current?.injectJavaScript(`
+                restablecerEncuadre();
+                true;
+            `);
+        }
+    }, [restablecerEncuadre]);
+
     return (
         <WebView
+            ref={mapaRef}
             originWhitelist={['*']}
-            source={{ html, baseUrl: 'https://localhost/' }}
+            source={{
+                html,
+                baseUrl: 'https://localhost/',
+            }}
             style={commonStyles.cinesMapaWebView}
             javaScriptEnabled
             domStorageEnabled
             scrollEnabled={false}
-            onError={(event) => {
+            onError={event => {
                 console.error(
                     'Error al cargar el mapa:',
                     event.nativeEvent.description

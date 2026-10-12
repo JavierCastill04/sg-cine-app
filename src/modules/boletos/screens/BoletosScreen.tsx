@@ -1,18 +1,12 @@
-
-import { useEffect, useState } from "react";
-import {
-    FlatList,
-    Modal,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { FlatList, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, View, } from "react-native";
 import { Eye, X } from "lucide-react-native";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { cargarMisReservasThunk } from "../../../redux/thunks/reservasThunks";
 import type { Venta } from "../../../types/Venta";
 import { commonStyles, colores } from "../../../theme";
+import { useCargaPantalla } from "../../../hooks/useCargaPantalla";
+import EstadoPantalla from "../../../components/estadoPantalla/EstadoPantalla";
 import Boleto from "../components/Boleto";
 
 export default function BoletosScreen() {
@@ -22,9 +16,22 @@ export default function BoletosScreen() {
     const [ventaSeleccionada, setVentaSeleccionada] =
         useState<Venta | null>(null);
 
-    useEffect(() => {
-        dispatch(cargarMisReservasThunk());
+    const cargar = useCallback(async () => {
+        await dispatch(cargarMisReservasThunk()).unwrap();
     }, [dispatch]);
+
+    const {
+        cargando,
+        actualizando,
+        error,
+        datosCargados,
+        actualizar,
+        reintentar,
+    } = useCargaPantalla({ cargar });
+
+    useEffect(() => {
+        void reintentar();
+    }, [reintentar]);
 
     const cerrarModal = () => {
         setVentaSeleccionada(null);
@@ -37,9 +44,7 @@ export default function BoletosScreen() {
             </Text>
 
             <Text style={commonStyles.secondaryText}>
-                {item.cineNombre
-                    ? `${item.cineNombre} · `
-                    : ""}
+                {item.cineNombre ? `${item.cineNombre} · ` : ""}
                 {item.salaNombre ?? "Sala no disponible"}
             </Text>
 
@@ -51,12 +56,7 @@ export default function BoletosScreen() {
                 Asientos: {item.asientos.join(", ")}
             </Text>
 
-            <Text
-                style={[
-                    commonStyles.secondaryText,
-                    { marginTop: 5 },
-                ]}
-            >
+            <Text style={[commonStyles.secondaryText, { marginTop: 5 }]}>
                 Total: ${item.total.toFixed(2)}
             </Text>
 
@@ -68,12 +68,7 @@ export default function BoletosScreen() {
                 onPress={() => setVentaSeleccionada(item)}
             >
                 <Eye size={20} />
-                <Text
-                    style={[
-                        commonStyles.buttonText,
-                        { marginLeft: 8 },
-                    ]}
-                >
+                <Text style={[commonStyles.buttonText, { marginLeft: 8 }]}>
                     Ver boleto
                 </Text>
             </TouchableOpacity>
@@ -81,59 +76,91 @@ export default function BoletosScreen() {
     );
 
     return (
-        <View style={commonStyles.containerScreen}>
-            <FlatList
-                data={ventas}
-                keyExtractor={item => item.id.toString()}
-                renderItem={renderVenta}
-                ListEmptyComponent={
-                    <Text style={commonStyles.secondaryText}>
-                        No tienes boletos guardados.
-                    </Text>
-                }
-            />
+        <EstadoPantalla
+            cargando={cargando}
+            error={error}
+            datosCargados={datosCargados}
+            onReintentar={reintentar}
+        >
+            <View style={commonStyles.containerScreen}>
+                <FlatList
+                    data={ventas}
+                    keyExtractor={item => item.id.toString()}
+                    renderItem={renderVenta}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={actualizando}
+                            onRefresh={actualizar}
+                            tintColor={colores.enfasis}
+                            colors={[colores.enfasis]}
+                        />
+                    }
+                    ListEmptyComponent={
+                        <Text
+                            style={[
+                                commonStyles.secondaryText,
+                                { textAlign: "center", marginTop: 20 },
+                            ]}
+                        >
+                            No tienes boletos guardados.
+                        </Text>
+                    }
+                    showsVerticalScrollIndicator={false}
+                />
 
-            <Modal
-                visible={ventaSeleccionada !== null}
-                transparent
-                animationType="fade"
-                onRequestClose={cerrarModal}
-            >
-                <View
-                    style={[
-                        commonStyles.modalOverlay,
-                        { backgroundColor: "rgba(0, 0, 0, 0.8)" },
-                    ]}
+                <Modal
+                    visible={ventaSeleccionada !== null}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={cerrarModal}
                 >
                     <View
                         style={[
-                            commonStyles.modal,
+                            commonStyles.modalOverlay,
                             {
-                                borderWidth: 2,
-                                borderColor: colores.enfasis,
+                                backgroundColor: "rgba(0, 0, 0, 0.8)",
+                                flex: 1,
+                                justifyContent: "center",
+                                alignItems: "center",
                             },
                         ]}
                     >
                         <View
-                            style={{
-                                flexDirection: "row",
-                                justifyContent: "flex-end",
-                                marginBottom: 5,
-                            }}
+                            style={[
+                                commonStyles.modal,
+                                {
+                                    width: "85%",
+                                    maxHeight: "75%",
+                                    padding: 16,
+                                    borderWidth: 2,
+                                    borderColor: colores.enfasis,
+                                },
+                            ]}
                         >
-                            <TouchableOpacity onPress={cerrarModal}>
-                                <X size={28} color={colores.enfasis} />
-                            </TouchableOpacity>
-                        </View>
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    justifyContent: "flex-end",
+                                    marginBottom: 5,
+                                }}
+                            >
+                                <TouchableOpacity onPress={cerrarModal}>
+                                    <X size={28} color={colores.enfasis} />
+                                </TouchableOpacity>
+                            </View>
 
-                        <ScrollView showsVerticalScrollIndicator={false}>
-                            {ventaSeleccionada && (
-                                <Boleto venta={ventaSeleccionada} />
-                            )}
-                        </ScrollView>
+                            <ScrollView
+                                showsVerticalScrollIndicator={false}
+                                contentContainerStyle={{ paddingBottom: 8 }}
+                            >
+                                {ventaSeleccionada && (
+                                    <Boleto venta={ventaSeleccionada} />
+                                )}
+                            </ScrollView>
+                        </View>
                     </View>
-                </View>
-            </Modal>
-        </View>
+                </Modal>
+            </View>
+        </EstadoPantalla>
     );
 }

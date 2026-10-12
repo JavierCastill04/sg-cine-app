@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Text, View, } from 'react-native';
+import { useCallback, useEffect, useMemo, useState, } from 'react';
+import { FlatList, RefreshControl, Text, View, } from 'react-native';
 import * as Location from 'expo-location';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import { cargarCines } from '../../../redux/thunks/cineThunks';
-import { commonStyles } from '../../../theme';
+import { commonStyles, colores } from '../../../theme';
+import { useCargaPantalla } from '../../../hooks/useCargaPantalla';
+import EstadoPantalla from '../../../components/estadoPantalla/EstadoPantalla';
+
 import CinesMapa from '../components/CinesMapa';
 import { ordenarCinesPorDistancia, type Ubicacion, type CineConDistancia, } from '../utils/distancia';
 
@@ -11,8 +14,6 @@ export default function CinesScreen() {
     const dispatch = useAppDispatch();
 
     const cines = useAppSelector(state => state.cine.lista);
-    const cargando = useAppSelector(state => state.cine.cargando);
-    const error = useAppSelector(state => state.cine.error);
 
     const [ubicacionUsuario, setUbicacionUsuario] =
         useState<Ubicacion | null>(null);
@@ -20,24 +21,71 @@ export default function CinesScreen() {
     const [mensajeUbicacion, setMensajeUbicacion] =
         useState<string | null>(null);
 
-    useEffect(() => {
-        dispatch(cargarCines());
+    const [restablecerEncuadre, setRestablecerEncuadre] =
+        useState(0);
+
+    const cargar = useCallback(async () => {
+        await dispatch(cargarCines()).unwrap();
     }, [dispatch]);
+
+    const {
+        cargando,
+        actualizando,
+        error,
+        datosCargados,
+        actualizar,
+        reintentar,
+    } = useCargaPantalla({ cargar });
+
+    useEffect(() => {
+        void reintentar();
+    }, [reintentar]);
+
+    const obtenerUbicacion = useCallback(async () => {
+        try {
+            const permiso =
+                await Location.requestForegroundPermissionsAsync();
+
+            if (permiso.status !== 'granted') {
+                setMensajeUbicacion(
+                    'Permiso de ubicación denegado. Puedes consultar los cines sin distancias.'
+                );
+                return;
+            }
+
+            const posicion = await Location.getCurrentPositionAsync({
+                accuracy: Location.Accuracy.Balanced,
+            });
+
+            setUbicacionUsuario({
+                latitud: posicion.coords.latitude,
+                longitud: posicion.coords.longitude,
+            });
+
+            setMensajeUbicacion(null);
+        } catch (err) {
+            console.error('Error al obtener ubicación:', err);
+
+            setMensajeUbicacion(
+                'No se pudo obtener tu ubicación. Verifica que el GPS esté activado.'
+            );
+        }
+    }, []);
 
     useEffect(() => {
         let activo = true;
 
-        const obtenerUbicacion = async () => {
+        const obtenerUbicacionInicial = async () => {
             try {
                 const permiso =
                     await Location.requestForegroundPermissionsAsync();
 
+                if (!activo) return;
+
                 if (permiso.status !== 'granted') {
-                    if (activo) {
-                        setMensajeUbicacion(
-                            'Permiso de ubicación denegado. Puedes consultar los cines sin distancias.'
-                        );
-                    }
+                    setMensajeUbicacion(
+                        'Permiso de ubicación denegado. Puedes consultar los cines sin distancias.'
+                    );
                     return;
                 }
 
@@ -45,13 +93,14 @@ export default function CinesScreen() {
                     accuracy: Location.Accuracy.Balanced,
                 });
 
-                if (activo) {
-                    setUbicacionUsuario({
-                        latitud: posicion.coords.latitude,
-                        longitud: posicion.coords.longitude,
-                    });
-                    setMensajeUbicacion(null);
-                }
+                if (!activo) return;
+
+                setUbicacionUsuario({
+                    latitud: posicion.coords.latitude,
+                    longitud: posicion.coords.longitude,
+                });
+
+                setMensajeUbicacion(null);
             } catch (err) {
                 console.error('Error al obtener ubicación:', err);
 
@@ -63,12 +112,19 @@ export default function CinesScreen() {
             }
         };
 
-        obtenerUbicacion();
+        void obtenerUbicacionInicial();
 
         return () => {
             activo = false;
         };
     }, []);
+
+    const actualizarYRestablecer = useCallback(async () => {
+        await actualizar();
+        await obtenerUbicacion();
+
+        setRestablecerEncuadre(valor => valor + 1);
+    }, [actualizar, obtenerUbicacion]);
 
     const cinesOrdenados = useMemo<CineConDistancia[]>(() => {
         if (!ubicacionUsuario) {
@@ -100,30 +156,29 @@ export default function CinesScreen() {
     );
 
     return (
-        <View style={commonStyles.cinesContainer}>
-            {cargando ? (
-                <View style={commonStyles.cinesEstadoContainer}>
-                    <ActivityIndicator size="large" />
-                    <Text style={commonStyles.cinesDescription}>
-                        Cargando cines...
-                    </Text>
-                </View>
-            ) : error ? (
-                <View style={commonStyles.cinesEstadoContainer}>
-                    <Text style={commonStyles.cinesDescription}>
-                        {error}
-                    </Text>
-                </View>
-            ) : (
+        <EstadoPantalla
+            cargando={cargando}
+            error={error}
+            datosCargados={datosCargados}
+            onReintentar={reintentar}
+        >
+            <View style={commonStyles.cinesContainer}>
                 <FlatList
                     data={cinesOrdenados}
                     keyExtractor={item => String(item.id)}
                     renderItem={renderCine}
                     contentContainerStyle={commonStyles.cinesLista}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={actualizando}
+                            onRefresh={actualizarYRestablecer}
+                            tintColor={colores.enfasis}
+                            colors={[colores.enfasis]}
+                        />
+                    }
                     ListHeaderComponent={
                         <View>
                             <Text style={commonStyles.title}>
-                                Cines cercanos
                             </Text>
 
                             {mensajeUbicacion && (
@@ -136,6 +191,7 @@ export default function CinesScreen() {
                                 <CinesMapa
                                     cines={cines}
                                     ubicacionUsuario={ubicacionUsuario}
+                                    restablecerEncuadre={restablecerEncuadre}
                                 />
                             </View>
                         </View>
@@ -147,7 +203,7 @@ export default function CinesScreen() {
                     }
                     showsVerticalScrollIndicator={false}
                 />
-            )}
-        </View>
+            </View>
+        </EstadoPantalla>
     );
 }
