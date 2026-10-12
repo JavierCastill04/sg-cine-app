@@ -1,8 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import { funcionesData } from "../../data/funcionesData";
 import type { Funcion } from "../../types/Funcion";
 
-const initialState: Funcion[] = funcionesData;
+const initialState: Funcion[] = [];
 
 const funcionSlice = createSlice({
     name: "funcion",
