@@ -7,15 +7,18 @@ import type { AuthState } from '../types/AuthState';
 const authTransform = createTransform<AuthState, AuthState>(
     (inboundState) => ({
         ...inboundState,
+        token: null,
+        autenticado: false,
+        accesoPersonalAutorizado: false,
     }),
     (outboundState) => ({
         ...outboundState,
-        autenticado: !!outboundState.token,
+        token: null,
+        autenticado: false,
         accesoPersonalAutorizado: false,
     }),
     { whitelist: ['auth'] }
 );
-
 
 const persistConfig: PersistConfig<
     ReturnType<typeof rootReducer>
@@ -33,7 +36,7 @@ const persistedReducer = persistReducer(
 
 export const store = configureStore({
     reducer: persistedReducer,
-    middleware: (getDefaultMiddleware) =>
+    middleware: getDefaultMiddleware =>
         getDefaultMiddleware({
             serializableCheck: false,
             immutableCheck: false,

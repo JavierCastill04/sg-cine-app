@@ -1,41 +1,27 @@
-
 import { useState } from 'react';
-import {
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from 'react-native';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LogIn, ShieldCheck } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
-
 import type { RootStackParamList } from '../../../navigation/types';
 import { colores, commonStyles } from '../../../theme';
 import { useAppDispatch } from '../../../redux/hooks';
 import { login } from '../../../redux/slices/authSlice';
 import { usuariosService } from '../../../services/usuarios.service';
-import { establecerToken } from '../../../services/api';
+import { guardarToken } from '../../../services/secureStorage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
-export default function LoginScreen({
-    navigation,
-    route,
-}: Props) {
+export default function LoginScreen({ navigation, route }: Props) {
     const dispatch = useAppDispatch();
-
     const [usuario, setUsuario] = useState('');
     const [contraseña, setContraseña] = useState('');
     const [cargando, setCargando] = useState(false);
-
     const funcionId = route.params?.funcionId;
 
     const iniciarSesion = async () => {
-        if (cargando) {
-            return;
-        }
+        if (cargando) return;
 
         const correo = usuario.trim().toLowerCase();
 
@@ -64,14 +50,12 @@ export default function LoginScreen({
                 rol: respuesta.usuario.rol,
             };
 
-            establecerToken(respuesta.token);
+            await guardarToken(respuesta.token);
 
-            dispatch(
-                login({
-                    usuario: usuarioAutenticado,
-                    token: respuesta.token,
-                })
-            );
+            dispatch(login({
+                usuario: usuarioAutenticado,
+                token: respuesta.token,
+            }));
 
             Toast.show({
                 type: 'success',
@@ -97,10 +81,9 @@ export default function LoginScreen({
             Toast.show({
                 type: 'error',
                 text1: 'Error al iniciar sesión',
-                text2:
-                    error instanceof Error
-                        ? error.message
-                        : 'No se pudo iniciar sesión',
+                text2: error instanceof Error
+                    ? error.message
+                    : 'No se pudo iniciar sesión',
                 position: 'bottom',
             });
         } finally {
@@ -113,31 +96,19 @@ export default function LoginScreen({
             <View style={commonStyles.centeredContent}>
                 <View style={commonStyles.card}>
                     <View style={commonStyles.centeredHeader}>
-                        <ShieldCheck
-                            size={70}
-                            color={colores.enfasis}
-                        />
-
-                        <Text style={commonStyles.title}>
-                            Iniciar sesión
-                        </Text>
-
+                        <ShieldCheck size={70} color={colores.enfasis} />
+                        <Text style={commonStyles.title}>Iniciar sesión</Text>
                         <Text style={commonStyles.secondaryText}>
                             Accede a tu cuenta de Cine App
                         </Text>
                     </View>
 
                     <View style={commonStyles.inputView}>
-                        <Text style={commonStyles.label}>
-                            Correo electrónico
-                        </Text>
-
+                        <Text style={commonStyles.label}>Correo electrónico</Text>
                         <TextInput
                             style={commonStyles.input}
                             placeholder="Ingresa tu correo"
-                            placeholderTextColor={
-                                colores.textoSecundario
-                            }
+                            placeholderTextColor={colores.textoSecundario}
                             value={usuario}
                             onChangeText={setUsuario}
                             autoCapitalize="none"
@@ -147,16 +118,11 @@ export default function LoginScreen({
                     </View>
 
                     <View style={commonStyles.inputView}>
-                        <Text style={commonStyles.label}>
-                            Contraseña
-                        </Text>
-
+                        <Text style={commonStyles.label}>Contraseña</Text>
                         <TextInput
                             style={commonStyles.input}
                             placeholder="Ingresa tu contraseña"
-                            placeholderTextColor={
-                                colores.textoSecundario
-                            }
+                            placeholderTextColor={colores.textoSecundario}
                             value={contraseña}
                             onChangeText={setContraseña}
                             secureTextEntry
@@ -166,35 +132,21 @@ export default function LoginScreen({
 
                     <View style={commonStyles.verticalButtons}>
                         <TouchableOpacity
-                            style={[
-                                commonStyles.button,
-                                commonStyles.buttonWithIcon,
-                            ]}
+                            style={[commonStyles.button, commonStyles.buttonWithIcon]}
                             onPress={iniciarSesion}
                             disabled={cargando}
                         >
-                            <LogIn
-                                size={20}
-                                color={colores.negro}
-                            />
-
+                            <LogIn size={20} color={colores.negro} />
                             <Text style={commonStyles.buttonText}>
-                                {cargando
-                                    ? 'Iniciando sesión...'
-                                    : 'Iniciar sesión'}
+                                {cargando ? 'Iniciando sesión...' : 'Iniciar sesión'}
                             </Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={[
-                                commonStyles.button,
-                                commonStyles.dangerButton,
-                            ]}
+                            style={[commonStyles.button, commonStyles.dangerButton]}
                             onPress={() => navigation.goBack()}
                         >
-                            <Text style={commonStyles.dangerButtonText}>
-                                Volver
-                            </Text>
+                            <Text style={commonStyles.dangerButtonText}>Volver</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

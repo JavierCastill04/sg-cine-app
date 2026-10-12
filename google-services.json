@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "948140414078",
+    "project_id": "sg-cine-app",
+    "storage_bucket": "sg-cine-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:948140414078:android:1befc1e83a3cfa52bf342f",
+        "android_client_info": {
+          "package_name": "com.alealvarez75.sgcinema"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlYcA-6YaIKweBSCOu3d0bbiITOZe2b2Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
