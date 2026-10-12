@@ -69,7 +69,9 @@ export default function FuncionDetalleModal({
     if (!funcion || !pelicula || !sala) return null;
 
     const asientosReservados = new Set(
-        datosAsientos?.asientosOcupados ?? []
+        datosAsientos?.asientos
+            .filter(asiento => asiento.estado === "ocupado")
+            .map(asiento => asiento.asiento) ?? []
     );
 
     const estadoAsientos: EstadoAsiento[] = sala.asientos.map(asiento => ({

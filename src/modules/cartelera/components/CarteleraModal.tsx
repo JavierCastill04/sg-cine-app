@@ -40,7 +40,9 @@ export default function CarteleraModal({
     }
 
     const funcionesPelicula = funciones.filter(
-        funcion => funcion.peliculaId === pelicula.id
+        funcion =>
+            funcion.peliculaId === pelicula.id &&
+            funcion.estado === 'activa'
     );
 
     const seleccionarFuncion = (funcionId: number) => {

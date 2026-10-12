@@ -6,14 +6,15 @@ import ventaReducer from './slices/ventaSlice';
 import salaReducer from './slices/salaSlice';
 import authReducer from './slices/authSlice';
 import cineReducer from './slices/cineSlice';
-
+import reservaReducer from './slices/reservasSlice';
 const rootReducer = combineReducers({
     funcion: funcionReducer,
     pelicula: peliculaReducer,
     venta: ventaReducer,
     sala: salaReducer,
     auth: authReducer,
-    cine: cineReducer
+    cine: cineReducer,
+    reservas: reservaReducer,
 });
 
 export default rootReducer;

@@ -45,7 +45,7 @@ export default function LoginScreen({ navigation, route }: Props) {
 
             const usuarioAutenticado = {
                 id: respuesta.usuario.id,
-                usuario: respuesta.usuario.correo,
+                correo: respuesta.usuario.correo,
                 nombre: respuesta.usuario.nombre,
                 rol: respuesta.usuario.rol,
             };
