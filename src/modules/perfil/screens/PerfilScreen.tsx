@@ -8,7 +8,7 @@ import { commonStyles, colores } from '../../../theme';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import { logout } from '../../../redux/slices/authSlice';
 import { eliminarToken } from '../../../services/secureStorage';
-
+import { limpiarVentas } from '../../../redux/slices/ventaSlice'
 type Navigation = NativeStackNavigationProp<RootStackParamList>;
 
 export default function PerfilScreen() {
@@ -21,6 +21,7 @@ export default function PerfilScreen() {
     const cerrarSesion = async () => {
         try {
             await eliminarToken();
+            dispatch(limpiarVentas());
             dispatch(logout());
         } catch (error) {
             console.error('Error al cerrar sesión:', error);
@@ -59,25 +60,25 @@ export default function PerfilScreen() {
                                 Iniciar sesión
                             </Text>
                         </TouchableOpacity>
-                        
-<TouchableOpacity
-    style={[
-        commonStyles.button,
-        commonStyles.profileButton,
-    ]}
-    onPress={() => navigation.navigate('Registro')}
-    accessibilityRole="button"
-    accessibilityLabel="Crear una cuenta"
->
-    <UserPlus
-        size={20}
-        color={colores.negro}
-    />
 
-    <Text style={commonStyles.buttonText}>
-        Crear una cuenta
-    </Text>
-</TouchableOpacity>
+                        <TouchableOpacity
+                            style={[
+                                commonStyles.button,
+                                commonStyles.profileButton,
+                            ]}
+                            onPress={() => navigation.navigate('Registro')}
+                            accessibilityRole="button"
+                            accessibilityLabel="Crear una cuenta"
+                        >
+                            <UserPlus
+                                size={20}
+                                color={colores.negro}
+                            />
+
+                            <Text style={commonStyles.buttonText}>
+                                Crear una cuenta
+                            </Text>
+                        </TouchableOpacity>
 
                     </View>
                 ) : (

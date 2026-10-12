@@ -13,6 +13,12 @@ export const enviarBoleto = async (
         );
     }
 
+    if (!venta.usuario?.correo) {
+        throw new Error(
+            "No hay un correo de cliente disponible para esta reserva."
+        );
+    }
+
     const resultado = await MailComposer.composeAsync({
         recipients: [venta.usuario.correo],
         subject: "Tu boleto - Cine App",
