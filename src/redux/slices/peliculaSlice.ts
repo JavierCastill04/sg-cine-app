@@ -1,14 +1,19 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-import { peliculasData } from "../../data/peliculasData";
-import type { Pelicula } from "../../types/Pelicula";
+import { peliculasData } from '../../data/peliculasData';
+import type { Pelicula } from '../../types/Pelicula';
 
 const initialState: Pelicula[] = peliculasData;
 
 const peliculaSlice = createSlice({
-    name: "pelicula",
+    name: 'pelicula',
     initialState,
     reducers: {
+        // Reemplazar el listado con películas del backend
+        setPeliculas: (state, action: PayloadAction<Pelicula[]>) => {
+            return action.payload;
+        },
+
         // Agregar película
         addPelicula: (state, action: PayloadAction<Pelicula>) => {
             state.push(action.payload);
@@ -39,6 +44,7 @@ const peliculaSlice = createSlice({
 });
 
 export const {
+    setPeliculas,
     addPelicula,
     updatePelicula,
     removePelicula,

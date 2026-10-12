@@ -1,5 +1,11 @@
 import { View, Text, TouchableOpacity, FlatList, Alert, Modal } from 'react-native';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import {
+    peliculasService,
+    convertirPelicula,
+    type CrearPeliculaRequest,
+} from '../../../services/peliculas.service';import { setPeliculas } from '../../../redux/slices/peliculaSlice';
 import { useAppSelector, useAppDispatch } from '../../../redux/hooks';
 import { addPelicula, updatePelicula, removePelicula } from '../../../redux/slices/peliculaSlice';
 import { commonStyles, colores } from '../../../theme';
@@ -13,9 +19,41 @@ import { validarCampo } from '../peliculaValidaciones';
 export default function PeliculasScreen() {
     const peliculas = useAppSelector(state => state.pelicula);
     const dispatch = useAppDispatch();
+    useFocusEffect(
+    useCallback(() => {
+        let activo = true;
 
+        const cargarPeliculas = async () => {
+            try {
+                const respuesta = await peliculasService.listar();
+
+                if (activo) {
+                    dispatch(
+                        setPeliculas(respuesta.map(convertirPelicula))
+                    );
+                }
+            } catch (error) {
+                if (activo) {
+                    console.error('Error al cargar películas:', error);
+                    Alert.alert(
+                        'Error de conexión',
+                        'No se pudieron cargar las películas desde Railway.'
+                    );
+                }
+            }
+        };
+
+        cargarPeliculas();
+
+        return () => {
+            activo = false;
+        };
+    }, [dispatch])
+);
     const [mostrarFormulario, setMostrarFormulario] = useState(false);
+    const [guardando, setGuardando] = useState(false);
     const [peliculaEditando, setPeliculaEditando] = useState<number | null>(null);
+    const [peliculaCambiandoEstadoId, setPeliculaCambiandoEstadoId] = useState<number | null>(null);
     const [codigo, setCodigo] = useState('');
     const [nombre, setNombre] = useState('');
     const [genero, setGenero] = useState('');
@@ -55,7 +93,7 @@ export default function PeliculasScreen() {
         setMostrarFormulario(true);
     };
 
-    const guardarPelicula = () => {
+    const guardarPelicula = async () => {
         if (codigo.trim() === '') return Alert.alert('Campo obligatorio', 'Debes ingresar el código de la película.');
 
         if (!/^PEL-\d{3}$/.test(codigo.trim()))
@@ -81,36 +119,93 @@ export default function PeliculasScreen() {
         if (precioNumerico <= 0)
             return Alert.alert('Precio inválido', 'El precio no puede ser negativo.');
 
-        if (peliculaEditando !== null) {
-            const peliculaActual = peliculas.find(p => p.id === peliculaEditando);
-            if (!peliculaActual) return;
+        
+if (peliculaEditando !== null) {
+    if (guardando) return;
 
-            dispatch(updatePelicula({
-                id: peliculaEditando,
-                codigo: codigo.trim(),
-                nombre: nombre.trim(),
-                genero: genero.trim(),
-                duracion: duracionNumerica,
-                clasificacion: clasificacion.trim(),
-                precio: precioNumerico,
-                disponible: peliculaActual.disponible
-            }));
+    const datos: CrearPeliculaRequest = {
+        codigo: codigo.trim(),
+        nombre: nombre.trim(),
+        genero: genero.trim(),
+        duracion: duracionNumerica,
+        clasificacion: clasificacion.trim(),
+        precio: precioNumerico,
+    };
 
-            Alert.alert('Película actualizada', `La película "${nombre.trim()}" se actualizó correctamente.`);
-        } else {
-            dispatch(addPelicula({
-                id: Date.now(),
-                codigo: codigo.trim(),
-                nombre: nombre.trim(),
-                genero: genero.trim(),
-                duracion: duracionNumerica,
-                clasificacion: clasificacion.trim(),
-                precio: precioNumerico,
-                disponible: true
-            }));
+    setGuardando(true);
 
-            Alert.alert('Película agregada', `La película "${nombre.trim()}" se agregó correctamente.`);
-        }
+    try {
+
+await peliculasService.actualizar(
+    peliculaEditando,
+    datos
+);
+
+const peliculasActualizadas = await peliculasService.listar();
+
+dispatch(
+    setPeliculas(peliculasActualizadas.map(convertirPelicula))
+);
+
+
+        Alert.alert(
+            'Película actualizada',
+            `La película "${nombre.trim()}" se actualizó correctamente en Railway.`
+        );
+    } catch (error) {
+        console.error('Error al actualizar película:', error);
+
+        Alert.alert(
+            'Error al actualizar',
+            'No se pudo actualizar la película en Railway. Verifica tu conexión, tus permisos y que el código no exista.'
+        );
+
+        return;
+    } finally {
+        setGuardando(false);
+    
+}
+
+        
+} else {
+    if (guardando) return;
+
+    const datos: CrearPeliculaRequest = {
+        codigo: codigo.trim(),
+        nombre: nombre.trim(),
+        genero: genero.trim(),
+        duracion: duracionNumerica,
+        clasificacion: clasificacion.trim(),
+        precio: precioNumerico,
+    };
+
+    setGuardando(true);
+
+    try {
+        const respuesta = await peliculasService.crear(datos);
+
+        dispatch(
+            addPelicula(convertirPelicula(respuesta.pelicula))
+        );
+
+        Alert.alert(
+            'Película agregada',
+            `La película "${nombre.trim()}" se registró correctamente en Railway.`
+        );
+    } catch (error) {
+        console.error('Error al registrar película:', error);
+
+        Alert.alert(
+            'Error al registrar',
+            'No se pudo registrar la película en Railway. Verifica tu conexión, tus permisos y que el código no exista.'
+        );
+
+        return;
+    } finally {
+        setGuardando(false);
+    }
+}
+
 
         setCodigo(''); setNombre(''); setGenero(''); setDuracion(''); setClasificacion(''); setPrecio('');
         setErrores({});
@@ -125,23 +220,86 @@ export default function PeliculasScreen() {
         setMostrarFormulario(false);
     };
 
-    const eliminarPelicula = (id: number, nombre: string) => {
-        Alert.alert('Eliminar película', `¿Estás seguro de que deseas eliminar "${nombre}"?`, [
-            { text: 'Cancelar', style: 'cancel' },
+
+const eliminarPelicula = (id: number, nombre: string) => {
+    Alert.alert(
+        'Eliminar película',
+        `¿Estás seguro de que deseas eliminar "${nombre}"?`,
+        [
+            {
+                text: 'Cancelar',
+                style: 'cancel',
+            },
             {
                 text: 'Eliminar',
                 style: 'destructive',
-                onPress: () => {
-                    dispatch(removePelicula(id));
-                    Alert.alert('Película eliminada', `La película "${nombre}" se eliminó correctamente.`);
-                }
-            }
-        ]);
-    };
+                onPress: async () => {
+                    try {
+                        await peliculasService.eliminar(id);
 
-    const cambiarDisponibilidad = (pelicula: Pelicula) => {
-        dispatch(updatePelicula({ ...pelicula, disponible: !pelicula.disponible }));
-    };
+                        dispatch(removePelicula(id));
+
+                        Alert.alert(
+                            'Película eliminada',
+                            `La película "${nombre}" se eliminó correctamente de Railway.`
+                        );
+                    } catch (error) {
+                        console.error(
+                            'Error al eliminar película:',
+                            error
+                        );
+
+                        Alert.alert(
+                            'No se pudo eliminar',
+                            'La película puede tener funciones asociadas o puede existir un problema de conexión o permisos.'
+                        );
+                    }
+                },
+            },
+        ]
+    );
+};
+
+
+
+
+const cambiarDisponibilidad = async (pelicula: Pelicula) => {
+    if (peliculaCambiandoEstadoId !== null) return;
+
+    const nuevoEstado = pelicula.disponible
+        ? 'No disponible'
+        : 'Disponible';
+
+    setPeliculaCambiandoEstadoId(pelicula.id);
+
+    try {
+        await peliculasService.cambiarEstado(
+            pelicula.id,
+            nuevoEstado
+        );
+
+        const peliculasActualizadas = await peliculasService.listar();
+
+        dispatch(
+            setPeliculas(peliculasActualizadas.map(convertirPelicula))
+        );
+
+        Alert.alert(
+            'Estado actualizado',
+            `La película "${pelicula.nombre}" ahora está ${nuevoEstado.toLowerCase()}.`
+        );
+    } catch (error) {
+        console.error('Error al cambiar disponibilidad:', error);
+
+        Alert.alert(
+            'Error al cambiar disponibilidad',
+            'No se pudo completar o verificar el cambio de estado en Railway. Vuelve a consultar las películas antes de intentarlo nuevamente.'
+        );
+    } finally {
+        setPeliculaCambiandoEstadoId(null);
+    }
+};
+
 
     return (
         <View style={commonStyles.containerScreen}>
@@ -161,6 +319,7 @@ export default function PeliculasScreen() {
                         onEditar={() => editarPelicula(item)}
                         onEliminar={() => eliminarPelicula(item.id, item.nombre)}
                         onCambiarDisponibilidad={() => cambiarDisponibilidad(item)}
+                        cambiandoDisponibilidad={peliculaCambiandoEstadoId !== null}
                     />
                 )}
             />
@@ -171,6 +330,7 @@ export default function PeliculasScreen() {
                         <PeliculaForm
                             codigo={codigo}
                             nombre={nombre}
+                            guardando={guardando}
                             genero={genero}
                             duracion={duracion}
                             clasificacion={clasificacion}
