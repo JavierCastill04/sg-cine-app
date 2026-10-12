@@ -5,6 +5,8 @@ export type RootStackParamList = {
     Login: {
         funcionId?: number;
     } | undefined;
+    
+    Registro: undefined;
 
     ClienteNavigator: undefined;
     PersonalNavigator: undefined;

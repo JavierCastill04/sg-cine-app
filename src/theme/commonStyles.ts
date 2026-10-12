@@ -390,4 +390,212 @@ cinesDescription: {
     textAlign: 'center',
 },
     
+    cinesLista: {
+        paddingHorizontal: espaciado.lg,
+        paddingBottom: espaciado.xl,
+        gap: espaciado.md,
+    },
+
+    cinesCard: {
+        backgroundColor: colores.secundario,
+        borderRadius: layout.radius,
+        padding: espaciado.lg,
+        borderLeftWidth: 4,
+        borderLeftColor: colores.enfasis,
+    },
+
+    cinesNombre: {
+        ...tipografia.heading,
+        color: colores.enfasis,
+        marginBottom: espaciado.sm,
+    },
+
+    cinesDireccion: {
+        ...tipografia.body,
+        color: colores.claro,
+    },
+
+    cinesEstadoContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: espaciado.lg,
+    },
+    
+cinesMapaContenedor: {
+    height: 280,
+    marginHorizontal: espaciado.lg,
+    marginBottom: espaciado.lg,
+    borderRadius: layout.radius,
+    overflow: 'hidden',
+    backgroundColor: colores.secundario,
+},
+
+cinesMapaWebView: {
+    flex: 1,
+    backgroundColor: colores.secundario,
+},
+
+cinesDistancia: {
+    ...tipografia.body,
+    color: colores.enfasis,
+    marginTop: espaciado.sm,
+    fontWeight: '600',
+},
+
+    dashboardValor: {
+        fontSize: 32,
+        fontWeight: '700',
+        color: colores.enfasis,
+        marginBottom: espaciado.xs,
+    },
+
+    dashboardPelicula: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: colores.superficie,
+        marginBottom: espaciado.sm,
+    },
+
+    dashboardSeparacion: {
+        marginTop: espaciado.md,
+    },
+
+    dashboardCineFila: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: espaciado.sm,
+        gap: espaciado.sm,
+    },
+
+    dashboardCineNombre: {
+        ...tipografia.body,
+        color: colores.superficie,
+        flex: 1,
+    },
+
+    dashboardCineIngreso: {
+        ...tipografia.body,
+        color: colores.enfasis,
+        fontWeight: '700',
+    },
+
+    dashboardEstado: {
+        ...tipografia.body,
+        color: colores.superficie,
+        textAlign: 'center',
+        marginTop: espaciado.lg,
+    },
+
+    dashboardReintentar: {
+        marginTop: espaciado.lg,
+    },
+    
+    toastContainer: {
+        width: '90%',
+        backgroundColor: colores.secundario,
+        borderRadius: layout.radius,
+        borderLeftWidth: 4,
+        padding: espaciado.md,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: espaciado.md,
+    },
+
+    toastExito: {
+        borderLeftColor: colores.verde,
+    },
+
+    toastError: {
+        borderLeftColor: colores.rojo,
+    },
+
+    toastInfo: {
+        borderLeftColor: colores.enfasis,
+    },
+
+    toastContenido: {
+        flex: 1,
+    },
+
+    toastTitulo: {
+        color: colores.blanco,
+        fontSize: 15,
+        fontWeight: '700',
+        marginBottom: espaciado.xs,
+    },
+
+    toastDescripcion: {
+        color: colores.claro,
+        fontSize: 13,
+    },
+        funcionPickerContainer: {
+        backgroundColor: colores.superficie,
+        borderWidth: 1,
+        borderColor: colores.borde,
+        borderRadius: layout.radius,
+        overflow: 'hidden',
+    },
+
+    funcionPicker: {
+        color: colores.texto,
+        backgroundColor: colores.superficie,
+    },
+
+    funcionCampoTexto: {
+        ...tipografia.body,
+        color: colores.texto,
+    },
+
+    funcionCampoPlaceholder: {
+        ...tipografia.body,
+        color: colores.textoSecundario,
+    },
+
+    funcionCampoSoloLectura: {
+        backgroundColor: colores.secundario,
+        borderWidth: 1,
+        borderColor: colores.borde,
+        borderRadius: layout.radius,
+        paddingVertical: espaciado.md,
+        paddingHorizontal: espaciado.lg,
+    },
+
+    funcionTextoSoloLectura: {
+        ...tipografia.body,
+        color: colores.claro,
+    },
+        perfilNotificacionesCard: {
+        marginTop: espaciado.md,
+    },
+
+    perfilNotificacionesFila: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: espaciado.md,
+    },
+
+    perfilNotificacionesContenido: {
+        flex: 1,
+    },
+
+    perfilNotificacionesTitulo: {
+        ...tipografia.body,
+        color: colores.claro,
+        fontWeight: '700',
+        marginBottom: espaciado.xs,
+    },
+
+    perfilNotificacionesDescripcion: {
+        ...tipografia.body,
+        color: colores.textoSecundario,
+        fontSize: 13,
+    },
+    perfilScrollContenido: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingVertical: espaciado.lg,
+},
 });

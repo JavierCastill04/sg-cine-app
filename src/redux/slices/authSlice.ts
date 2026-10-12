@@ -1,12 +1,12 @@
 
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-
-import type { Usuario } from "../../types/Usuario";
-import type { AuthState } from "../../types/AuthState";
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import type { Usuario } from '../../types/Usuario';
+import type { AuthState } from '../../types/AuthState';
 
 const initialState: AuthState = {
     autenticado: false,
     usuario: null,
+    token: null,
     biometriaActiva: false,
     usuarioBiometria: null,
     accesoPersonalAutorizado: false,
@@ -14,13 +14,35 @@ const initialState: AuthState = {
 };
 
 const authSlice = createSlice({
-    name: "auth",
+    name: 'auth',
     initialState,
     reducers: {
-        login: (state, action: PayloadAction<Usuario>) => {
+        login: (
+            state,
+            action: PayloadAction<{
+                usuario: Usuario;
+                token: string | null;
+            }>
+        ) => {
             state.versionSesion += 1;
             state.autenticado = true;
-            state.usuario = action.payload;
+            state.usuario = action.payload.usuario;
+            state.token = action.payload.token;
+            state.accesoPersonalAutorizado = false;
+        },
+
+        restaurarSesion: (
+            state,
+            action: PayloadAction<string>
+        ) => {
+            if (!state.usuario) {
+                state.token = null;
+                state.autenticado = false;
+                return;
+            }
+
+            state.token = action.payload;
+            state.autenticado = true;
             state.accesoPersonalAutorizado = false;
         },
 
@@ -28,6 +50,7 @@ const authSlice = createSlice({
             state.versionSesion += 1;
             state.autenticado = false;
             state.usuario = null;
+            state.token = null;
             state.accesoPersonalAutorizado = false;
         },
 
@@ -54,7 +77,7 @@ const authSlice = createSlice({
         ) => {
             if (
                 state.autenticado &&
-                state.usuario?.rol === "personal" &&
+                state.usuario?.rol === 'personal' &&
                 state.usuario.id === action.payload.usuarioId &&
                 state.versionSesion === action.payload.versionSesion
             ) {
@@ -70,6 +93,7 @@ const authSlice = createSlice({
 
 export const {
     login,
+    restaurarSesion,
     logout,
     activarBiometria,
     desactivarBiometria,

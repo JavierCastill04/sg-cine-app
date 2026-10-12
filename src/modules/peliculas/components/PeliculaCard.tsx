@@ -10,6 +10,7 @@ interface Props {
   onEditar: () => void;
   onEliminar: () => void;
   onCambiarDisponibilidad: () => void;
+  cambiandoDisponibilidad?: boolean;
 }
 
 export default function PeliculaCard({
@@ -17,6 +18,7 @@ export default function PeliculaCard({
   onEditar,
   onEliminar,
   onCambiarDisponibilidad,
+  cambiandoDisponibilidad = false,
 }: Props) {
   return (
     <View style={commonStyles.card}>
@@ -75,19 +77,23 @@ export default function PeliculaCard({
           />
         </TouchableOpacity>
 
-        {/* Habilitar / Deshabilitar */}
-        <TouchableOpacity
-          style={[
-            commonStyles.cardButton,
-            { backgroundColor: colores.enfasis },
-          ]}
-          onPress={onCambiarDisponibilidad}
-        >
-          <Power
-            size={20}
-            color={colores.negro}
-          />
-        </TouchableOpacity>
+{/* Habilitar / Deshabilitar */}
+<TouchableOpacity
+  style={[
+    commonStyles.cardButton,
+    { backgroundColor: colores.enfasis },
+  ]}
+  onPress={onCambiarDisponibilidad}
+  disabled={cambiandoDisponibilidad}
+  accessibilityRole="button"
+  accessibilityLabel={`Cambiar disponibilidad de ${pelicula.nombre}`}
+  accessibilityState={{ disabled: cambiandoDisponibilidad }}
+>
+  <Power
+    size={20}
+    color={colores.negro}
+  />
+</TouchableOpacity>
 
         {/* Eliminar */}
         <TouchableOpacity

@@ -1,93 +1,166 @@
-import { useState } from "react";
-import { FlatList, Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { FlatList, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, View, } from "react-native";
 import { Eye, X } from "lucide-react-native";
-import { useAppSelector } from "../../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { cargarMisReservasThunk } from "../../../redux/thunks/reservasThunks";
 import type { Venta } from "../../../types/Venta";
 import { commonStyles, colores } from "../../../theme";
+import { useCargaPantalla } from "../../../hooks/useCargaPantalla";
+import EstadoPantalla from "../../../components/estadoPantalla/EstadoPantalla";
 import Boleto from "../components/Boleto";
 
 export default function BoletosScreen() {
+    const dispatch = useAppDispatch();
     const ventas = useAppSelector(state => state.venta);
-    const funciones = useAppSelector(state => state.funcion);
-    const peliculas = useAppSelector(state => state.pelicula);
-    const salas = useAppSelector(state => state.sala);
 
-    const [ventaSeleccionada, setVentaSeleccionada] = useState<Venta | null>(null);
-    const cerrarModal = () => { setVentaSeleccionada(null); };
+    const [ventaSeleccionada, setVentaSeleccionada] =
+        useState<Venta | null>(null);
 
-    const renderVenta = ({ item }: { item: Venta }) => {
-        const funcion = funciones.find(funcion => funcion.id === item.funcionId);
-        const pelicula = funcion ? peliculas.find(pelicula => pelicula.id === funcion.peliculaId) : null;
-        const sala = funcion ? salas.find(sala => sala.id === funcion.salaId) : null;
+    const cargar = useCallback(async () => {
+        await dispatch(cargarMisReservasThunk()).unwrap();
+    }, [dispatch]);
 
-        if (!funcion || !pelicula || !sala) {
-            return null;
-        }
+    const {
+        cargando,
+        actualizando,
+        error,
+        datosCargados,
+        actualizar,
+        reintentar,
+    } = useCargaPantalla({ cargar });
 
-        return (
-            <View style={commonStyles.card}>
-                <Text style={commonStyles.cardTitle}>{pelicula.nombre}</Text>
-                <Text style={commonStyles.secondaryText}>{sala.nombre}</Text>
-                <Text style={commonStyles.secondaryText}>{funcion.fecha} - {funcion.horaInicio}</Text>
-                <Text style={[commonStyles.secondaryText, { marginTop: 5 }]}>Total: ${item.total.toFixed(2)}</Text>
-                <TouchableOpacity
-                    style={[commonStyles.button, { marginTop: 15, flexDirection: "row" }]}
-                    onPress={() => setVentaSeleccionada(item)}
-                >
-                    <Eye size={20} />
-                    <Text style={[commonStyles.buttonText, { marginLeft: 8 }]}>Ver boleto</Text>
-                </TouchableOpacity>
-            </View>
-        );
+    useEffect(() => {
+        void reintentar();
+    }, [reintentar]);
+
+    const cerrarModal = () => {
+        setVentaSeleccionada(null);
     };
 
-    const venta = ventaSeleccionada;
+    const renderVenta = ({ item }: { item: Venta }) => (
+        <View style={commonStyles.card}>
+            <Text style={commonStyles.cardTitle}>
+                {item.peliculaNombre ?? "Película"}
+            </Text>
 
-    const funcion = venta
-        ? funciones.find(funcion => funcion.id === venta.funcionId)
-        : null;
+            <Text style={commonStyles.secondaryText}>
+                {item.cineNombre ? `${item.cineNombre} · ` : ""}
+                {item.salaNombre ?? "Sala no disponible"}
+            </Text>
 
-    const pelicula = funcion
-        ? peliculas.find(pelicula => pelicula.id === funcion.peliculaId)
-        : null;
+            <Text style={commonStyles.secondaryText}>
+                {item.fechaHoraFuncion ?? "Fecha no disponible"}
+            </Text>
 
-    const sala = funcion
-        ? salas.find(sala => sala.id === funcion.salaId)
-        : null;
+            <Text style={commonStyles.secondaryText}>
+                Asientos: {item.asientos.join(", ")}
+            </Text>
+
+            <Text style={[commonStyles.secondaryText, { marginTop: 5 }]}>
+                Total: ${item.total.toFixed(2)}
+            </Text>
+
+            <TouchableOpacity
+                style={[
+                    commonStyles.button,
+                    { marginTop: 15, flexDirection: "row" },
+                ]}
+                onPress={() => setVentaSeleccionada(item)}
+            >
+                <Eye size={20} />
+                <Text style={[commonStyles.buttonText, { marginLeft: 8 }]}>
+                    Ver boleto
+                </Text>
+            </TouchableOpacity>
+        </View>
+    );
 
     return (
-        <View style={commonStyles.containerScreen}>
-            <FlatList
-                data={ventas}
-                keyExtractor={item => item.id.toString()}
-                renderItem={renderVenta}
-                ListEmptyComponent={
-                    <Text style={commonStyles.secondaryText}>No tienes boletos comprados.</Text>
-                }
-            />
+        <EstadoPantalla
+            cargando={cargando}
+            error={error}
+            datosCargados={datosCargados}
+            onReintentar={reintentar}
+        >
+            <View style={commonStyles.containerScreen}>
+                <FlatList
+                    data={ventas}
+                    keyExtractor={item => item.id.toString()}
+                    renderItem={renderVenta}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={actualizando}
+                            onRefresh={actualizar}
+                            tintColor={colores.enfasis}
+                            colors={[colores.enfasis]}
+                        />
+                    }
+                    ListEmptyComponent={
+                        <Text
+                            style={[
+                                commonStyles.secondaryText,
+                                { textAlign: "center", marginTop: 20 },
+                            ]}
+                        >
+                            No tienes boletos guardados.
+                        </Text>
+                    }
+                    showsVerticalScrollIndicator={false}
+                />
 
-            <Modal visible={venta !== null} transparent animationType="fade" onRequestClose={cerrarModal}>
-                <View style={[commonStyles.modalOverlay, { backgroundColor: "rgba(0, 0, 0, 0.8)" }]}>
-                    <View style={[commonStyles.modal, { borderWidth: 2, borderColor: colores.enfasis }]}>
-                        <View style={{ flexDirection: "row", justifyContent: "flex-end", marginBottom: 5 }}>
-                            <TouchableOpacity onPress={cerrarModal}>
-                                <X size={28} color={colores.enfasis} />
-                            </TouchableOpacity>
+                <Modal
+                    visible={ventaSeleccionada !== null}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={cerrarModal}
+                >
+                    <View
+                        style={[
+                            commonStyles.modalOverlay,
+                            {
+                                backgroundColor: "rgba(0, 0, 0, 0.8)",
+                                flex: 1,
+                                justifyContent: "center",
+                                alignItems: "center",
+                            },
+                        ]}
+                    >
+                        <View
+                            style={[
+                                commonStyles.modal,
+                                {
+                                    width: "85%",
+                                    maxHeight: "75%",
+                                    padding: 16,
+                                    borderWidth: 2,
+                                    borderColor: colores.enfasis,
+                                },
+                            ]}
+                        >
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    justifyContent: "flex-end",
+                                    marginBottom: 5,
+                                }}
+                            >
+                                <TouchableOpacity onPress={cerrarModal}>
+                                    <X size={28} color={colores.enfasis} />
+                                </TouchableOpacity>
+                            </View>
+
+                            <ScrollView
+                                showsVerticalScrollIndicator={false}
+                                contentContainerStyle={{ paddingBottom: 8 }}
+                            >
+                                {ventaSeleccionada && (
+                                    <Boleto venta={ventaSeleccionada} />
+                                )}
+                            </ScrollView>
                         </View>
-
-                        <ScrollView showsVerticalScrollIndicator={false}>
-                            {venta && funcion && pelicula && sala && (
-                                <Boleto
-                                    venta={venta}
-                                    funcion={funcion}
-                                    pelicula={pelicula}
-                                    sala={sala}
-                                />
-                            )}
-                        </ScrollView>
                     </View>
-                </View>
-            </Modal >
-        </View >
+                </Modal>
+            </View>
+        </EstadoPantalla>
     );
 }

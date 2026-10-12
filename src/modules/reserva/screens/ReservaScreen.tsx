@@ -1,47 +1,222 @@
 import { useEffect, useState } from "react";
-import { Alert, BackHandler, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Alert, BackHandler, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { cargarAsientosFuncion, cargarFuncionPorId } from "../../../redux/thunks/funcionThunks";
+import { crearReservaThunk } from "../../../redux/thunks/reservasThunks";
+import { cargarPeliculas } from "../../../redux/thunks/peliculaThunks";
+import { cargarSalas } from "../../../redux/thunks/salaThunks";
 import type { RootStackParamList } from "../../../navigation/types";
-import { commonStyles } from "../../../theme";
-import type { Cliente } from "../../../types/Cliente";
+import { commonStyles, colores } from "../../../theme";
 import type { Venta } from "../../../types/Venta";
-import { BarraProgreso, FormBotones, PasoAsientos, PasoCliente, PasoConfirmacion, PasoContainer, PasoFuncion } from "../components";
-import { validarCampo } from "../validarCliente";
+import { BarraProgreso, FormBotones, PasoAsientos, PasoConfirmacion, PasoContainer, PasoFuncion } from "../components";
 import GeneradorQR from "../../ventas/GeneradorQR";
 import { generarBoleto } from "../../ventas/generarBoleto";
 import { enviarBoleto } from "../../ventas/enviarBoleto";
-import { registrarVenta } from "../../ventas/registrarVenta";
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { funcionesService } from '../../../services/funciones.service';
+import { notificacionesService } from '../../../services/notificaciones.service';
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-const pasos = ["Función", "Asientos", "Datos", "Confirmar", "Boleto"];
+
+const pasos = ["Función", "Asientos", "Confirmar", "Boleto"];
+
+const convertirAsientoApi = (asientoId: string): string => {
+    // Si ya tiene el formato de la API, se conserva sin modificar.
+    if (/^[A-Z]+[1-9]\d*$/.test(asientoId)) {
+        return asientoId;
+    }
+
+    // Convierte el identificador interno sala-fila-columna al formato de la API.
+    const coincidencia = asientoId.match(/^\d+-([A-Z]+)-([1-9]\d*)$/);
+
+    if (!coincidencia) {
+        throw new Error(`Identificador de asiento inválido: ${asientoId}`);
+    }
+
+    return `${coincidencia[1]}${coincidencia[2]}`;
+};
+const CLAVE_MODO_DEMOSTRACION = '@sgcine:modoDemostracionNotificaciones';
+
+const programarNotificacionesReserva = async (
+    codigoReserva: string,
+    funcionId: number,
+    nombrePelicula: string
+): Promise<void> => {
+    const permisos = await notificacionesService.configurar();
+
+    if (!permisos) {
+        return;
+    }
+
+    await notificacionesService.notificarCompra(nombrePelicula);
+
+    const [funcionApi, preferencia] = await Promise.all([
+        funcionesService.obtenerPorId(funcionId),
+        AsyncStorage.getItem(CLAVE_MODO_DEMOSTRACION),
+    ]);
+
+    if (funcionApi.estado !== 'activa') {
+        return;
+    }
+
+    await notificacionesService.programarRecordatorio(
+        codigoReserva,
+        nombrePelicula,
+        funcionApi.fechaHora,
+        preferencia === 'true'
+    );
+};
 
 export default function ReservaScreen({ route }: any) {
     const navigation = useNavigation<NavigationProp>();
     const { funcionId, pasoInicial } = route.params;
-    const [paso, setPaso] = useState(
-        pasoInicial === 2 ? 2 :1
-    );
-    const [tokenQR, setTokenQR] = useState("");
+    const dispatch = useAppDispatch();
+
+    const [paso, setPaso] = useState(pasoInicial === 2 ? 2 : 1);
     const [comprando, setComprando] = useState(false);
+    const [cargandoDatos, setCargandoDatos] = useState(true);
+    const [cargandoAsientos, setCargandoAsientos] = useState(false);
+    const [errorCarga, setErrorCarga] = useState<string | null>(null);
     const [venta, setVenta] = useState<Venta | null>(null);
     const [pdfUri, setPdfUri] = useState<string | null>(null);
     const [seleccionados, setSeleccionados] = useState<string[]>([]);
-    const [cliente, setCliente] = useState<Cliente>({ nombre: "", correo: "", telefono: "" });
-    const funcion = useAppSelector(state => state.funcion.find(f => f.id === funcionId));
-    const pelicula = useAppSelector(state => state.pelicula.find(p => p.id === funcion?.peliculaId));
-    const sala = useAppSelector(state => state.sala.find(s => s.id === funcion?.salaId));
-    const dispatch = useAppDispatch();
 
-    if (!funcion || !pelicula || !sala) {
+    const funcion = useAppSelector(
+        state => state.funcion.find(f => f.id === funcionId)
+    );
+
+    const pelicula = useAppSelector(
+        state => state.pelicula.lista.find(p => p.id === funcion?.peliculaId)
+    );
+
+    const sala = useAppSelector(
+        state => state.sala.find(s => s.id === funcion?.salaId)
+    );
+
+    const usuario = useAppSelector(state => state.auth.usuario);
+
+    useEffect(() => {
+        let vigente = true;
+
+        const cargarDatos = async () => {
+            setCargandoDatos(true);
+            setErrorCarga(null);
+
+            try {
+                const resultados = await Promise.all([
+                    dispatch(cargarFuncionPorId(funcionId)).unwrap(),
+                    dispatch(cargarPeliculas()).unwrap(),
+                    dispatch(cargarSalas()).unwrap(),
+                ]);
+
+                if (!vigente) return;
+
+                const funcionCargada = resultados[0];
+
+                if (funcionCargada.estado === "cancelada") {
+                    setErrorCarga("Esta función ha sido cancelada.");
+                }
+            } catch (error) {
+                if (vigente) {
+                    setErrorCarga(
+                        typeof error === "string"
+                            ? error
+                            : error instanceof Error
+                                ? error.message
+                                : "No se pudieron cargar los datos de la función."
+                    );
+                }
+            } finally {
+                if (vigente) setCargandoDatos(false);
+            }
+        };
+
+        void cargarDatos();
+
+        return () => {
+            vigente = false;
+        };
+    }, [dispatch, funcionId]);
+
+    useEffect(() => {
+        if (paso !== 2 || !funcion || !sala) return;
+
+        let vigente = true;
+
+        const cargarAsientos = async () => {
+            setCargandoAsientos(true);
+
+            try {
+                await dispatch(
+                    cargarAsientosFuncion({
+                        funcionId: funcion.id,
+                        salaId: sala.id,
+                    })
+                ).unwrap();
+            } catch (error) {
+                if (vigente) {
+                    Alert.alert(
+                        "Error",
+                        typeof error === "string"
+                            ? error
+                            : "No se pudieron cargar los asientos disponibles."
+                    );
+                }
+            } finally {
+                if (vigente) setCargandoAsientos(false);
+            }
+        };
+
+        void cargarAsientos();
+
+        return () => {
+            vigente = false;
+        };
+    }, [paso, funcion?.id, sala?.id, dispatch]);
+
+    useEffect(() => {
+        const manejarAtras = () => {
+            if (paso > 1 && paso < 4) {
+                setPaso(actual => actual - 1);
+                return true;
+            }
+
+            navigation.pop();
+            return true;
+        };
+
+        const suscripcion = BackHandler.addEventListener(
+            "hardwareBackPress",
+            manejarAtras
+        );
+
+        return () => suscripcion.remove();
+    }, [paso, navigation]);
+
+    if (cargandoDatos) {
         return (
-            <View style={commonStyles.containerScreen}>
-                <Text style={commonStyles.text}>
-                    No se encontró la función.
-                </Text>
-            </View>
+            <SafeAreaView style={commonStyles.containerScreen}>
+                <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                    <ActivityIndicator size="large" color={colores.enfasis} />
+                    <Text style={commonStyles.text}>
+                        Cargando datos de la función...
+                    </Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    if (errorCarga || !funcion || !pelicula || !sala) {
+        return (
+            <SafeAreaView style={commonStyles.containerScreen}>
+                <View style={{ padding: 20 }}>
+                    <Text style={commonStyles.text}>
+                        {errorCarga ?? "No se encontró la función, la película o la sala."}
+                    </Text>
+                </View>
+            </SafeAreaView>
         );
     }
 
@@ -55,36 +230,16 @@ export default function ReservaScreen({ route }: any) {
         );
     };
 
-    const actualizarCliente = (
-        campo: keyof Cliente,
-        valor: string
-    ) => {
-        setCliente(actual => ({
-            ...actual,
-            [campo]: valor
-        }));
-    };
-
     const puedeContinuar = () => {
         if (paso === 2) {
-            return seleccionados.length > 0;
+            return seleccionados.length > 0 && !cargandoAsientos;
         }
 
-        if (paso === 3) {
-            const errores = {
-                nombre: validarCampo("nombre", cliente.nombre),
-                correo: validarCampo("correo", cliente.correo),
-                telefono: validarCampo("telefono", cliente.telefono)
-            };
-            return Object.values(errores).every(error => error === "");
-        }
-        return paso < 4;
+        return paso < 3;
     };
 
     const continuar = () => {
-        if (puedeContinuar()) {
-            setPaso(actual => actual + 1);
-        }
+        if (puedeContinuar()) setPaso(actual => actual + 1);
     };
 
     const volver = () => {
@@ -92,87 +247,127 @@ export default function ReservaScreen({ route }: any) {
             navigation.pop();
             return;
         }
+
         setPaso(actual => actual - 1);
     };
 
-    const confirmarCompra = () => {
-        if (comprando) { return; }
+    const confirmarCompra = async () => {
+        if (comprando) return;
+
+        if (!usuario || usuario.rol !== "cliente") {
+            Alert.alert(
+                "Sesión no válida",
+                "Debes iniciar sesión como cliente para reservar."
+            );
+            return;
+        }
+
+        if (seleccionados.length === 0) {
+            Alert.alert(
+                "Selecciona asientos",
+                "Debes seleccionar al menos un asiento."
+            );
+            return;
+        }
+
         setComprando(true);
 
-        const venta = registrarVenta(dispatch, {
-            funcion,
-            pelicula,
-            cliente,
-            asientos: seleccionados,
-            total
-        });
-        setVenta(venta);
-        setTokenQR(venta.token);
-        setPaso(5);
+        try {
+            const asientosApi = seleccionados.map(convertirAsientoApi);
+
+            const reserva = await dispatch(
+                crearReservaThunk({
+                    funcionId: funcion.id,
+                    asientos: asientosApi,
+                })
+            ).unwrap();
+
+            const fechaFin = new Date(`${funcion.fecha}T${funcion.horaInicio}`);
+
+            fechaFin.setMinutes(fechaFin.getMinutes() + pelicula.duracion);
+
+            const nuevaVenta: Venta = {
+                id: reserva.id,
+                funcionId: reserva.funcionId,
+                usuario,
+                asientos: reserva.asientos,
+                cantidadBoletos: reserva.asientos.length,
+                total: Number(reserva.total),
+                fechaVenta: new Date().toISOString(),
+                token: reserva.codigo,
+                tokenExpira: fechaFin.toISOString(),
+                tokenUsado: reserva.estado === "utilizada",
+            };
+
+            setVenta(nuevaVenta);
+            setPdfUri(null);
+            setPaso(4);
+            void programarNotificacionesReserva(
+    reserva.codigo,
+    reserva.funcionId,
+    reserva.pelicula ?? 'tu pelicula'
+).catch(error => {
+    console.error(
+        'La reserva se confirmó, pero no se pudieron programar las notificaciones:',
+        error
+    );
+});
+        } catch (error) {
+            const mensaje =
+                typeof error === "string"
+                    ? error
+                    : error instanceof Error
+                        ? error.message
+                        : "No se pudo crear la reserva.";
+
+            Alert.alert("No se pudo completar la reserva", mensaje);
+        } finally {
+            setComprando(false);
+        }
     };
-
-    useEffect(() => {
-        const manejarAtras = () => {
-            if (paso > 1) {
-                setPaso(actual => actual - 1);
-                return true;
-            }
-            navigation.pop();
-            return true;
-        };
-
-        const suscripcion = BackHandler.addEventListener(
-            "hardwareBackPress",
-            manejarAtras
-        );
-
-        return () => suscripcion.remove();
-    }, [paso, navigation]);
 
     return (
         <SafeAreaView style={commonStyles.containerScreen}>
             <ScrollView>
                 <Text style={commonStyles.title}>Reserva de boletos</Text>
-                <BarraProgreso paso={paso} pasos={pasos} />
-                <PasoContainer paso={paso}>
 
+                <BarraProgreso paso={paso} pasos={pasos} />
+
+                <PasoContainer paso={paso}>
                     {paso === 1 && (
-                        <PasoFuncion
-                            pelicula={pelicula}
-                            sala={sala}
-                            funcion={funcion}
-                        />
+                        <PasoFuncion pelicula={pelicula} sala={sala} funcion={funcion} />
                     )}
 
                     {paso === 2 && (
-                        <PasoAsientos
-                            sala={sala}
-                            funcion={funcion}
-                            seleccionados={seleccionados}
-                            total={total}
-                            onSeleccionar={seleccionarAsiento}
-                        />
+                        <>
+                            {cargandoAsientos && (
+                                <Text style={commonStyles.text}>
+                                    Cargando disponibilidad de asientos...
+                                </Text>
+                            )}
+
+                            <PasoAsientos
+                                sala={sala}
+                                funcion={funcion}
+                                seleccionados={seleccionados}
+                                total={total}
+                                onSeleccionar={seleccionarAsiento}
+                            />
+                        </>
                     )}
 
-                    {paso === 3 && (
-                        <PasoCliente
-                            cliente={cliente}
-                            onChange={actualizarCliente}
-                        />
-                    )}
-
-                    {paso === 4 && (
+                    {paso === 3 && usuario && (
                         <PasoConfirmacion
                             pelicula={pelicula}
                             sala={sala}
                             funcion={funcion}
                             seleccionados={seleccionados}
-                            cliente={cliente}
+                            usuario={usuario}
                             total={total}
                         />
                     )}
 
-                    {paso === 5 && venta && (
+                    {paso === 4 && venta && (
                         <GeneradorQR
                             token={venta.token}
                             onGenerado={async qr => {
@@ -182,24 +377,17 @@ export default function ReservaScreen({ route }: any) {
                                         pelicula,
                                         sala,
                                         funcion,
-                                        qr
+                                        qr,
                                     });
 
                                     setPdfUri(uri);
-
-                                } catch (error) {
-                                    Alert.alert(
-                                        "Error",
-                                        "No se pudo generar el boleto."
-                                    );
+                                } catch {
+                                    Alert.alert("Error", "No se pudo generar el boleto.");
                                 }
                             }}
                             onEnviar={async () => {
                                 if (!pdfUri) {
-                                    Alert.alert(
-                                        "Error",
-                                        "El boleto todavía no está listo."
-                                    );
+                                    Alert.alert("Error", "El boleto todavía no está listo.");
                                     return;
                                 }
 
@@ -207,24 +395,28 @@ export default function ReservaScreen({ route }: any) {
                                     await enviarBoleto(venta, pdfUri);
 
                                     Alert.alert(
-                                        "Boleto enviado",
-                                        `El boleto fue enviado a ${venta.cliente.correo}.`
-                                    );
+    "Boleto enviado",
+    venta.usuario?.correo
+        ? `El boleto fue enviado a ${venta.usuario.correo}.`
+        : "El boleto se envió correctamente."
+);
                                 } catch (error) {
                                     Alert.alert(
                                         "Error",
-                                        "No se pudo enviar el boleto."
+                                        error instanceof Error
+                                            ? error.message
+                                            : "No se pudo enviar el boleto."
                                     );
                                 }
                             }}
                             onSalir={() => navigation.pop()}
                         />
                     )}
-
                 </PasoContainer>
-                {paso < 5 && (
+
+                {paso < 4 && (
                     <FormBotones
-                        paso={paso}
+                        paso={paso === 3 ? 4 : paso}
                         puedeContinuar={puedeContinuar()}
                         onVolver={volver}
                         onContinuar={continuar}

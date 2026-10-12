@@ -11,14 +11,15 @@ const generos = [
     "Romance",
     "Comedia",
     "Aventura",
-    "Ciencia Ficción",
+    "Ciencia ficción",
 ];
 
 const clasificaciones = [
     "Todo público",
-    "12+",
-    "15+",
-    "18+",
+    "+13",
+    "+16",
+    "+18",
+    "TP"
 ];
 
 interface PeliculaFormProps {
@@ -27,6 +28,7 @@ interface PeliculaFormProps {
     genero: string;
     duracion: string;
     clasificacion: string;
+    guardando?: boolean;
     precio: string;
     setCodigo: (value: string) => void;
     setNombre: (value: string) => void;
@@ -43,7 +45,7 @@ interface PeliculaFormProps {
 export default function PeliculaForm({
     codigo, nombre, genero, duracion, clasificacion, precio,
     setCodigo, setNombre, setGenero, setDuracion, setClasificacion, setPrecio,
-    errores = {}, editando, onGuardar, onCancelar
+    errores = {}, editando, guardando = false, onGuardar, onCancelar
 }: PeliculaFormProps) {
     const inputStyle = (error?: string) => ({
         backgroundColor: colores.secundario,
@@ -174,14 +176,22 @@ export default function PeliculaForm({
                     "numeric"
                 )}
 
-                <TouchableOpacity
-                    style={[commonStyles.button, { marginTop: 5 }]}
-                    onPress={onGuardar}
-                >
-                    <Text style={commonStyles.buttonText}>
-                        {editando ? 'Actualizar película' : 'Guardar película'}
-                    </Text>
-                </TouchableOpacity>
+
+<TouchableOpacity
+    style={commonStyles.button}
+    onPress={onGuardar}
+    disabled={guardando}
+    accessibilityState={{ disabled: guardando }}
+>
+    <Text style={commonStyles.buttonText}>
+        {guardando
+            ? 'Guardando...'
+            : editando
+                ? 'Actualizar película'
+                : 'Guardar película'}
+    </Text>
+</TouchableOpacity>
+
 
                 <TouchableOpacity
                     style={[

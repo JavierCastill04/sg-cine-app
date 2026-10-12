@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from "react";
 import { BackHandler, Text, TouchableOpacity, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
@@ -18,20 +19,35 @@ export default function GeneradorQR({
     token,
     onGenerado,
     onEnviar,
-    onSalir
+    onSalir,
 }: Props) {
     const qrRef = useRef<QRCodeRef | null>(null);
+    const onGeneradoRef = useRef(onGenerado);
+    const generadoRef = useRef("");
 
     useEffect(() => {
-        if (!token || !qrRef.current) {
+        onGeneradoRef.current = onGenerado;
+    }, [onGenerado]);
+
+    useEffect(() => {
+        if (!token || !qrRef.current || generadoRef.current === token) {
             return;
         }
 
+        const tokenActual = token;
+
         qrRef.current.toDataURL(data => {
-            const qr = `data:image/png;base64,${data}`;
-            onGenerado(qr);
+            if (generadoRef.current === tokenActual) {
+                return;
+            }
+
+            generadoRef.current = tokenActual;
+
+            onGeneradoRef.current(
+                `data:image/png;base64,${data}`
+            );
         });
-    }, [token, onGenerado]);
+    }, [token]);
 
     useEffect(() => {
         const manejarAtras = () => {
@@ -49,8 +65,13 @@ export default function GeneradorQR({
 
     return (
         <View style={commonStyles.containerScreen}>
-            <Text style={[commonStyles.subtitle, { color: colores.enfasis }]}>
-                ¡Compra realizada!
+            <Text
+                style={[
+                    commonStyles.subtitle,
+                    { color: colores.enfasis },
+                ]}
+            >
+                ¡Reserva realizada!
             </Text>
 
             <Text style={commonStyles.text}>
@@ -69,7 +90,7 @@ export default function GeneradorQR({
                     backgroundColor: colores.superficie,
                     borderWidth: 8,
                     borderColor: colores.negro,
-                    borderRadius: 16
+                    borderRadius: 16,
                 }}
             >
                 <QRCode
@@ -82,15 +103,35 @@ export default function GeneradorQR({
             </View>
 
             <Text
-                style={[commonStyles.text, { textAlign: "center", marginBottom: 20 }]}>
-                ¡Presiona para enviar el boleto al correo que proporcionaste!
+                style={[
+                    commonStyles.text,
+                    {
+                        textAlign: "center",
+                        marginBottom: 20,
+                    },
+                ]}
+            >
+                Puedes enviar el boleto al correo de tu cuenta.
             </Text>
-            <TouchableOpacity style={commonStyles.button} onPress={onEnviar}>
-                <Text style={commonStyles.buttonText}>Enviar boleto al correo</Text>
+
+            <TouchableOpacity
+                style={commonStyles.button}
+                onPress={onEnviar}
+            >
+                <Text style={commonStyles.buttonText}>
+                    Enviar boleto al correo
+                </Text>
             </TouchableOpacity>
+
             <View style={{ marginVertical: 10 }} />
-            <TouchableOpacity style={commonStyles.button} onPress={onSalir}>
-                <Text style={commonStyles.buttonText}>Salir</Text>
+
+            <TouchableOpacity
+                style={commonStyles.button}
+                onPress={onSalir}
+            >
+                <Text style={commonStyles.buttonText}>
+                    Salir
+                </Text>
             </TouchableOpacity>
         </View>
     );

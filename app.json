@@ -2,6 +2,7 @@
   "expo": {
     "name": "sg-cine-app",
     "slug": "sg-cine-app",
+    "owner": "sg-cine-team",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,6 +12,7 @@
     },
     "android": {
       "package": "com.alealvarez75.sgcinema",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#1B1C20",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -25,7 +27,9 @@
     "plugins": [
       "@react-native-community/datetimepicker",
       "expo-sharing",
-      "expo-mail-composer"
+      "expo-mail-composer",
+      "expo-secure-store",
+      "expo-notifications"
     ],
     "extra": {
       "eas": {

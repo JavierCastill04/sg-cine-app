@@ -6,7 +6,7 @@ import ClienteNavigator from './ClienteNavigator';
 import PersonalNavigator from './PersonalNavigator';
 import ReservaScreen from '../modules/reserva/screens/ReservaScreen';
 import LoginScreen from '../modules/auth/screens/LoginScreen';
-
+import RegisterScreen from '../modules/auth/screens/RegisterScreen';
 import { useAppSelector } from '../redux/hooks';
 import type { RootStackParamList } from './types';
 
@@ -54,7 +54,11 @@ export default function AppNavigator() {
                 component={LoginScreen}
                 options={{ headerShown: false }}
             />
-
+             <Stack.Screen
+    name="Registro"
+    component={RegisterScreen}
+    options={{ headerShown: false }}
+/>
             <Stack.Screen
                 name="Reserva"
                 component={ReservaScreen}

@@ -1,61 +1,107 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import { funcionesData } from "../../data/funcionesData";
-import type { Funcion } from "../../types/Funcion";
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import type { Funcion } from '../../types/Funcion';
+import { cargarFunciones, cargarFuncionPorId, cargarAsientosFuncion, crearFuncionThunk, reprogramarFuncionThunk, cancelarFuncionThunk } from '../thunks/funcionThunks';
 
-const initialState: Funcion[] = funcionesData;
+const initialState: Funcion[] = [];
 
 const funcionSlice = createSlice({
-    name: "funcion",
+    name: 'funcion',
     initialState,
     reducers: {
-
-        addFuncion: (state, action: PayloadAction<Omit<Funcion, "id">>) => {
-            const nuevoId = state.length > 0 ? Math.max(...state.map(f => f.id)) + 1 : 1;
-            state.push({
-                id: nuevoId,
-                ...action.payload
-            });
-        },
-
-        updateFuncion: (state, action: PayloadAction<Funcion>) => {
-            const indice = state.findIndex(
-                (pelicula) => pelicula.id === action.payload.id,
+        reserveAsientos: (
+            state,
+            action: PayloadAction<{
+                funcionId: number;
+                asientos: string[];
+            }>
+        ) => {
+            const funcion = state.find(
+                f => f.id === action.payload.funcionId
             );
 
-            if (indice !== -1) {
-                state[indice] = action.payload;
-            }
-        },
-
-        removeFuncion: (state, action: PayloadAction<number>) => {
-            const indice = state.findIndex(
-                (pelicula) => pelicula.id === action.payload,
-            );
-
-            if (indice !== -1) {
-                state.splice(indice, 1);
-            }
-        },
-
-        reserveAsientos: (state, action: PayloadAction<{ funcionId: number; asientos: string[]; }>) => {
-            const funcion = state.find(funcion => funcion.id === action.payload.funcionId);
             if (!funcion) return;
 
             action.payload.asientos.forEach(asientoId => {
-                const asiento = funcion.estadoAsientos.find(asiento => asiento.asientoId === asientoId);
+                const asiento = funcion.estadoAsientos.find(
+                    a => a.asientoId === asientoId
+                );
+
                 if (asiento) {
-                    asiento.estado = "reservado";
+                    asiento.estado = 'reservado';
                 } else {
                     funcion.estadoAsientos.push({
                         asientoId,
-                        estado: "reservado"
+                        estado: 'reservado',
                     });
                 }
             });
         },
     },
+
+    extraReducers: builder => {
+        builder
+            .addCase(cargarFunciones.fulfilled, (_state, action) => {
+                return action.payload;
+            })
+
+            .addCase(cargarFuncionPorId.fulfilled, (state, action) => {
+                const indice = state.findIndex(
+                    f => f.id === action.payload.id
+                );
+
+                if (indice !== -1) {
+                    state[indice] = action.payload;
+                } else {
+                    state.push(action.payload);
+                }
+            })
+
+            .addCase(crearFuncionThunk.fulfilled, (state, action) => {
+                const indice = state.findIndex(
+                    f => f.id === action.payload.id
+                );
+
+                if (indice !== -1) {
+                    state[indice] = action.payload;
+                } else {
+                    state.push(action.payload);
+                }
+            })
+
+            .addCase(reprogramarFuncionThunk.fulfilled, (state, action) => {
+                const indice = state.findIndex(
+                    f => f.id === action.payload.id
+                );
+
+                if (indice !== -1) {
+                    state[indice] = action.payload;
+                } else {
+                    state.push(action.payload);
+                }
+            })
+
+            .addCase(cancelarFuncionThunk.fulfilled, (state, action) => {
+                const funcion = state.find(
+                    f => f.id === action.payload.id
+                );
+
+                if (funcion) {
+                    funcion.estado = action.payload.estado;
+                }
+            })
+
+            .addCase(cargarAsientosFuncion.fulfilled, (state, action) => {
+                const funcion = state.find(
+                    f => f.id === action.payload.funcionId
+                );
+
+                if (funcion) {
+                    funcion.estadoAsientos = action.payload.estadoAsientos;
+                }
+            });
+    },
 });
 
-export const { addFuncion, updateFuncion, removeFuncion, reserveAsientos } = funcionSlice.actions;
+export const { reserveAsientos } = funcionSlice.actions;
 
 export default funcionSlice.reducer;

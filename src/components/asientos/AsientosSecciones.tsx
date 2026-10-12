@@ -1,6 +1,7 @@
+
 import { useState } from "react";
 import { Armchair, ArrowLeft } from "lucide-react-native";
-import { FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import type { Asiento } from "../../types/Asiento";
 import type { EstadoAsiento } from "../../types/EstadoAsiento";
 import type { Seccion } from "../../types/Seccion";
@@ -17,6 +18,9 @@ interface AsientosSeccionesProps {
     mostrarSeleccionados?: boolean;
 }
 
+const obtenerIdApi = (asiento: Asiento) =>
+    `${asiento.ubicacion.letraFila}${asiento.ubicacion.columna}`;
+
 export default function AsientosSecciones({
     asientos,
     columnas,
@@ -24,7 +28,7 @@ export default function AsientosSecciones({
     seleccionados = [],
     onSeleccionar,
     soloLectura = false,
-    mostrarSeleccionados = false
+    mostrarSeleccionados = false,
 }: AsientosSeccionesProps) {
     const [seccionSeleccionada, setSeccionSeleccionada] = useState<Seccion>();
     const filas = Math.ceil(asientos.length / columnas);
@@ -35,7 +39,7 @@ export default function AsientosSecciones({
         { id: "A", nombre: "Sección A", asientos: [], columnas: mitadColumnas },
         { id: "B", nombre: "Sección B", asientos: [], columnas: columnas - mitadColumnas },
         { id: "C", nombre: "Sección C", asientos: [], columnas: mitadColumnas },
-        { id: "D", nombre: "Sección D", asientos: [], columnas: columnas - mitadColumnas }
+        { id: "D", nombre: "Sección D", asientos: [], columnas: columnas - mitadColumnas },
     ];
 
     asientos.forEach((asiento, index) => {
@@ -48,13 +52,18 @@ export default function AsientosSecciones({
         secciones[indice].asientos.push(asiento);
     });
 
-    const estados = new Map(estadoAsientos.map(a => [a.asientoId, a.estado]));
+    const estados = new Map(
+        estadoAsientos.map(asiento => [asiento.asientoId, asiento.estado])
+    );
 
     if (seccionSeleccionada) {
         return (
             <View>
                 <View style={styles.header}>
-                    <TouchableOpacity style={styles.volver} onPress={() => setSeccionSeleccionada(undefined)}>
+                    <TouchableOpacity
+                        style={styles.volver}
+                        onPress={() => setSeccionSeleccionada(undefined)}
+                    >
                         <ArrowLeft size={32} color={colores.texto} />
                     </TouchableOpacity>
 
@@ -70,14 +79,15 @@ export default function AsientosSecciones({
                         <FlatList
                             key={seccionSeleccionada.id}
                             data={seccionSeleccionada.asientos}
-                            keyExtractor={a => a.id}
+                            keyExtractor={asiento => asiento.id}
                             numColumns={seccionSeleccionada.columnas}
                             contentContainerStyle={styles.grid}
                             showsVerticalScrollIndicator
                             renderItem={({ item }) => {
-                                const estado = estados.get(item.id) ?? "disponible";
+                                const idApi = obtenerIdApi(item);
+                                const estado = estados.get(idApi) ?? "disponible";
                                 const seleccionado =
-                                    seleccionados.includes(item.id) ||
+                                    seleccionados.includes(idApi) ||
                                     estado === "seleccionado";
                                 const reservado = estado === "reservado";
 
@@ -91,13 +101,17 @@ export default function AsientosSecciones({
                                     <>
                                         <Armchair size={32} color={color} />
                                         <Text style={commonStyles.secondaryText}>
-                                            {item.ubicacion.letraFila}{item.ubicacion.columna}
+                                            {idApi}
                                         </Text>
                                     </>
                                 );
 
                                 if (soloLectura) {
-                                    return <View style={styles.asiento}>{contenido}</View>;
+                                    return (
+                                        <View style={styles.asiento}>
+                                            {contenido}
+                                        </View>
+                                    );
                                 }
 
                                 return (
@@ -105,9 +119,9 @@ export default function AsientosSecciones({
                                         style={[
                                             styles.asiento,
                                             reservado && styles.reservado,
-                                            seleccionado && styles.seleccionado
+                                            seleccionado && styles.seleccionado,
                                         ]}
-                                        onPress={() => onSeleccionar?.(item.id)}
+                                        onPress={() => onSeleccionar?.(idApi)}
                                         disabled={reservado}
                                         activeOpacity={0.7}
                                     >
@@ -146,10 +160,11 @@ export default function AsientosSecciones({
             </View>
 
             <View style={styles.mapa}>
-                {secciones.filter(s => s.asientos.length).map(seccion => {
-                    const disponibles = seccion.asientos.filter(
-                        a => (estados.get(a.id) ?? "disponible") === "disponible"
-                    ).length;
+                {secciones.filter(seccion => seccion.asientos.length > 0).map(seccion => {
+                    const disponibles = seccion.asientos.filter(asiento => {
+                        const estado = estados.get(obtenerIdApi(asiento)) ?? "disponible";
+                        return estado === "disponible";
+                    }).length;
 
                     return (
                         <TouchableOpacity
@@ -158,18 +173,27 @@ export default function AsientosSecciones({
                             onPress={() => setSeccionSeleccionada(seccion)}
                             activeOpacity={0.7}
                         >
-                            <Text style={commonStyles.cardTitle}>{seccion.nombre}</Text>
-                            <Text style={commonStyles.secondaryText}> {seccion.asientos.length} asientos </Text>
-                            <Text style={{ color: colores.verde }}> {disponibles} disponibles</Text>
-                            <Text style={{ color: colores.rojo }}>{seccion.asientos.length - disponibles} reservados</Text>
+                            <Text style={commonStyles.cardTitle}>
+                                {seccion.nombre}
+                            </Text>
+                            <Text style={commonStyles.secondaryText}>
+                                {seccion.asientos.length} asientos
+                            </Text>
+                            <Text style={{ color: colores.verde }}>
+                                {disponibles} disponibles
+                            </Text>
+                            <Text style={{ color: colores.rojo }}>
+                                {seccion.asientos.length - disponibles} reservados
+                            </Text>
+
                             {mostrarSeleccionados && (
                                 <Text style={styles.seleccionados}>
                                     Seleccionados:{" "}
                                     {seccion.asientos
-                                        .filter(asiento => seleccionados.includes(asiento.id))
-                                        .map(asiento =>
-                                            `${asiento.ubicacion.letraFila}${asiento.ubicacion.columna}`
+                                        .filter(asiento =>
+                                            seleccionados.includes(obtenerIdApi(asiento))
                                         )
+                                        .map(obtenerIdApi)
                                         .join(", ") || "Ninguno"}
                                 </Text>
                             )}

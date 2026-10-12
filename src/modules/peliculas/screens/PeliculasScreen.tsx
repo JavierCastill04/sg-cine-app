@@ -1,21 +1,25 @@
+import { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Alert, Modal } from 'react-native';
-import { useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { Plus } from 'lucide-react-native';
 import { useAppSelector, useAppDispatch } from '../../../redux/hooks';
-import { addPelicula, updatePelicula, removePelicula } from '../../../redux/slices/peliculaSlice';
+import { cargarPeliculas, crearPeliculaThunk, actualizarPeliculaThunk, eliminarPeliculaThunk, cambiarDisponibilidadThunk, } from '../../../redux/thunks/peliculaThunks';
 import { commonStyles, colores } from '../../../theme';
+import type { Pelicula } from '../../../types/Pelicula';
+import type { CrearPeliculaRequest, EstadoPelicula } from '../../../services/peliculas.service';
 import PeliculaForm from '../components/PeliculaForm';
 import PeliculaCard from '../components/PeliculaCard';
-import { Pelicula } from '../../../types/Pelicula';
-import { Plus } from 'lucide-react-native';
 import type { ErroresPelicula } from '../peliculaValidaciones';
 import { validarCampo } from '../peliculaValidaciones';
-
+import Toast from 'react-native-toast-message';
 export default function PeliculasScreen() {
-    const peliculas = useAppSelector(state => state.pelicula);
     const dispatch = useAppDispatch();
+    const peliculas = useAppSelector(state => state.pelicula.lista);
 
     const [mostrarFormulario, setMostrarFormulario] = useState(false);
+    const [guardando, setGuardando] = useState(false);
     const [peliculaEditando, setPeliculaEditando] = useState<number | null>(null);
+    const [peliculaCambiandoEstadoId, setPeliculaCambiandoEstadoId] = useState<number | null>(null);
     const [codigo, setCodigo] = useState('');
     const [nombre, setNombre] = useState('');
     const [genero, setGenero] = useState('');
@@ -24,9 +28,35 @@ export default function PeliculasScreen() {
     const [precio, setPrecio] = useState('');
     const [errores, setErrores] = useState<ErroresPelicula>({});
 
+    useFocusEffect(
+        useCallback(() => {
+            dispatch(cargarPeliculas());
+        }, [dispatch])
+    );
+
+    const limpiarFormulario = () => {
+        setCodigo('');
+        setNombre('');
+        setGenero('');
+        setDuracion('');
+        setClasificacion('');
+        setPrecio('');
+        setErrores({});
+        setPeliculaEditando(null);
+    };
+
     const cambiarCampo = (campo: keyof ErroresPelicula, valor: string) => {
-        const setters = { codigo: setCodigo, nombre: setNombre, genero: setGenero, duracion: setDuracion, clasificacion: setClasificacion, precio: setPrecio };
+        const setters = {
+            codigo: setCodigo,
+            nombre: setNombre,
+            genero: setGenero,
+            duracion: setDuracion,
+            clasificacion: setClasificacion,
+            precio: setPrecio,
+        };
+
         setters[campo](valor);
+
         const error = validarCampo(campo, valor, peliculas, peliculaEditando);
         setErrores(prev => {
             const nuevos = { ...prev };
@@ -37,13 +67,11 @@ export default function PeliculasScreen() {
     };
 
     const prepararNuevaPelicula = () => {
-        setPeliculaEditando(null);
-        setCodigo(''); setNombre(''); setGenero(''); setDuracion(''); setClasificacion(''); setPrecio('');
-        setErrores({});
+        limpiarFormulario();
         setMostrarFormulario(true);
     };
 
-    const editarPelicula = (pelicula: typeof peliculas[number]) => {
+    const editarPelicula = (pelicula: Pelicula) => {
         setPeliculaEditando(pelicula.id);
         setCodigo(pelicula.codigo);
         setNombre(pelicula.nombre);
@@ -55,8 +83,16 @@ export default function PeliculasScreen() {
         setMostrarFormulario(true);
     };
 
-    const guardarPelicula = () => {
-        if (codigo.trim() === '') return Alert.alert('Campo obligatorio', 'Debes ingresar el código de la película.');
+    const cancelarFormulario = () => {
+        limpiarFormulario();
+        setMostrarFormulario(false);
+    };
+
+    const guardarPelicula = async () => {
+        if (guardando) return;
+
+        if (!codigo.trim())
+            return Alert.alert('Campo obligatorio', 'Debes ingresar el código de la película.');
 
         if (!/^PEL-\d{3}$/.test(codigo.trim()))
             return Alert.alert('Código inválido', 'El código debe seguir el formato PEL-001, es decir, PEL- seguido de 3 números.');
@@ -64,83 +100,142 @@ export default function PeliculasScreen() {
         if (peliculas.some(p => p.id !== peliculaEditando && p.codigo.toLowerCase() === codigo.trim().toLowerCase()))
             return Alert.alert('Código duplicado', `Ya existe una película con el código ${codigo.trim()}. Ingresa un código diferente.`);
 
-        if (nombre.trim() === '') return Alert.alert('Campo obligatorio', 'Debes ingresar el nombre de la película.');
-        if (genero.trim() === '') return Alert.alert('Campo obligatorio', 'Debes ingresar el género de la película.');
+        if (!nombre.trim())
+            return Alert.alert('Campo obligatorio', 'Debes ingresar el nombre de la película.');
+
+        if (!genero.trim())
+            return Alert.alert('Campo obligatorio', 'Debes ingresar el género de la película.');
 
         const duracionNumerica = Number(duracion);
-        if (duracion.trim() === '' || isNaN(duracionNumerica))
+        if (!duracion.trim() || isNaN(duracionNumerica))
             return Alert.alert('Duración inválida', 'La duración debe ser un número válido.');
+
         if (duracionNumerica <= 0)
             return Alert.alert('Duración inválida', 'La duración debe ser mayor que 0 minutos.');
 
-        if (clasificacion.trim() === '') return Alert.alert('Campo obligatorio', 'Debes ingresar la clasificación de la película.');
+        if (!clasificacion.trim())
+            return Alert.alert('Campo obligatorio', 'Debes ingresar la clasificación de la película.');
 
         const precioNumerico = Number(precio);
-        if (precio.trim() === '' || isNaN(precioNumerico))
+        if (!precio.trim() || isNaN(precioNumerico))
             return Alert.alert('Precio inválido', 'El precio debe ser un número válido.');
+
         if (precioNumerico <= 0)
-            return Alert.alert('Precio inválido', 'El precio no puede ser negativo.');
+            return Alert.alert('Precio inválido', 'El precio debe ser mayor que 0.');
 
-        if (peliculaEditando !== null) {
-            const peliculaActual = peliculas.find(p => p.id === peliculaEditando);
-            if (!peliculaActual) return;
+        const datos: CrearPeliculaRequest = {
+            codigo: codigo.trim(),
+            nombre: nombre.trim(),
+            genero: genero.trim(),
+            duracion: duracionNumerica,
+            clasificacion: clasificacion.trim(),
+            precio: precioNumerico,
+        };
 
-            dispatch(updatePelicula({
-                id: peliculaEditando,
-                codigo: codigo.trim(),
-                nombre: nombre.trim(),
-                genero: genero.trim(),
-                duracion: duracionNumerica,
-                clasificacion: clasificacion.trim(),
-                precio: precioNumerico,
-                disponible: peliculaActual.disponible
-            }));
+        setGuardando(true);
 
-            Alert.alert('Película actualizada', `La película "${nombre.trim()}" se actualizó correctamente.`);
-        } else {
-            dispatch(addPelicula({
-                id: Date.now(),
-                codigo: codigo.trim(),
-                nombre: nombre.trim(),
-                genero: genero.trim(),
-                duracion: duracionNumerica,
-                clasificacion: clasificacion.trim(),
-                precio: precioNumerico,
-                disponible: true
-            }));
+        try {
+            if (peliculaEditando !== null) {
+                await dispatch(
+                    actualizarPeliculaThunk({ id: peliculaEditando, datos })
+                ).unwrap();
 
-            Alert.alert('Película agregada', `La película "${nombre.trim()}" se agregó correctamente.`);
-        }
+                Toast.show({
+    type: 'success',
+    text1: 'Película actualizada',
+    text2: `Los cambios de "${nombre.trim()}" se guardaron correctamente.`,
+    position: 'bottom',
+});
+            } else {
+                await dispatch(crearPeliculaThunk(datos)).unwrap();
 
-        setCodigo(''); setNombre(''); setGenero(''); setDuracion(''); setClasificacion(''); setPrecio('');
-        setErrores({});
-        setPeliculaEditando(null);
-        setMostrarFormulario(false);
-    };
-
-    const cancelarFormulario = () => {
-        setCodigo(''); setNombre(''); setGenero(''); setDuracion(''); setClasificacion(''); setPrecio('');
-        setErrores({});
-        setPeliculaEditando(null);
-        setMostrarFormulario(false);
-    };
-
-    const eliminarPelicula = (id: number, nombre: string) => {
-        Alert.alert('Eliminar película', `¿Estás seguro de que deseas eliminar "${nombre}"?`, [
-            { text: 'Cancelar', style: 'cancel' },
-            {
-                text: 'Eliminar',
-                style: 'destructive',
-                onPress: () => {
-                    dispatch(removePelicula(id));
-                    Alert.alert('Película eliminada', `La película "${nombre}" se eliminó correctamente.`);
-                }
+                Toast.show({
+    type: 'success',
+    text1: 'Película registrada',
+    text2: `"${nombre.trim()}" se agregó correctamente al catálogo.`,
+    position: 'bottom',
+});
             }
-        ]);
+
+            limpiarFormulario();
+            setMostrarFormulario(false);
+        } catch (error) {
+           Toast.show({
+    type: 'error',
+    text1: 'No se pudo guardar la película',
+    text2: 'Verifica los datos e inténtalo nuevamente.',
+    position: 'bottom',
+});
+        } finally {
+            setGuardando(false);
+        }
     };
 
-    const cambiarDisponibilidad = (pelicula: Pelicula) => {
-        dispatch(updatePelicula({ ...pelicula, disponible: !pelicula.disponible }));
+    const eliminarPelicula = (id: number, nombrePelicula: string) => {
+        Alert.alert(
+            'Eliminar película',
+            `¿Estás seguro de que deseas eliminar "${nombrePelicula}"?`,
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Eliminar',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await dispatch(eliminarPeliculaThunk(id)).unwrap();
+                            Toast.show({
+    type: 'success',
+    text1: 'Película eliminada',
+    text2: `"${nombrePelicula}" se eliminó correctamente del catálogo.`,
+    position: 'bottom',
+});
+                        } catch (error) {
+                        Toast.show({
+    type: 'error',
+    text1: 'No se pudo eliminar la película',
+    text2: 'Comprueba si tiene funciones asociadas e inténtalo nuevamente.',
+    position: 'bottom',
+});
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
+    const cambiarDisponibilidad = async (pelicula: Pelicula) => {
+        if (peliculaCambiandoEstadoId !== null) return;
+
+        const nuevoEstado: EstadoPelicula = pelicula.disponible
+            ? 'No disponible'
+            : 'Disponible';
+
+        setPeliculaCambiandoEstadoId(pelicula.id);
+
+        try {
+            await dispatch(
+                cambiarDisponibilidadThunk({
+                    id: pelicula.id,
+                    estado: nuevoEstado,
+                })
+            ).unwrap();
+
+Toast.show({
+    type: 'success',
+    text1: 'Disponibilidad actualizada',
+    text2: `"${pelicula.nombre}" ahora está ${nuevoEstado.toLowerCase()}.`,
+    position: 'bottom',
+});
+        } catch (error) {
+Toast.show({
+    type: 'error',
+    text1: 'No se pudo actualizar la disponibilidad',
+    text2: 'Inténtalo nuevamente en unos momentos.',
+    position: 'bottom',
+});
+        } finally {
+            setPeliculaCambiandoEstadoId(null);
+        }
     };
 
     return (
@@ -152,7 +247,9 @@ export default function PeliculasScreen() {
                 contentContainerStyle={{ paddingBottom: 100 }}
                 ListHeaderComponent={
                     <View>
-                        <Text style={commonStyles.secondaryText}>Películas registradas: {peliculas.length}</Text>
+                        <Text style={commonStyles.secondaryText}>
+                            Películas registradas: {peliculas.length}
+                        </Text>
                     </View>
                 }
                 renderItem={({ item }) => (
@@ -161,16 +258,30 @@ export default function PeliculasScreen() {
                         onEditar={() => editarPelicula(item)}
                         onEliminar={() => eliminarPelicula(item.id, item.nombre)}
                         onCambiarDisponibilidad={() => cambiarDisponibilidad(item)}
+                        cambiandoDisponibilidad={peliculaCambiandoEstadoId !== null}
                     />
                 )}
             />
-            <TouchableOpacity style={commonStyles.floatingButton} onPress={prepararNuevaPelicula}><Plus size={40} /></TouchableOpacity>
-            <Modal visible={mostrarFormulario} transparent animationType="slide" onRequestClose={cancelarFormulario}>
+
+            <TouchableOpacity
+                style={commonStyles.floatingButton}
+                onPress={prepararNuevaPelicula}
+            >
+                <Plus size={40} />
+            </TouchableOpacity>
+
+            <Modal
+                visible={mostrarFormulario}
+                transparent
+                animationType="slide"
+                onRequestClose={cancelarFormulario}
+            >
                 <View style={commonStyles.modalOverlay}>
                     <View style={[commonStyles.modal, { backgroundColor: colores.secundario, maxHeight: '90%' }]}>
                         <PeliculaForm
                             codigo={codigo}
                             nombre={nombre}
+                            guardando={guardando}
                             genero={genero}
                             duracion={duracion}
                             clasificacion={clasificacion}
