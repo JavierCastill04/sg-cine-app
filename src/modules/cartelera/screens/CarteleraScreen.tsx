@@ -1,41 +1,55 @@
-import { useMemo, useState } from "react";
-import { FlatList, Text, View } from "react-native";
-
-import { useAppSelector } from "../../../redux/hooks";
-import { Pelicula } from "../../../types/Pelicula";
-
-import Filtros from "../../../components/filtro/Filtros";
-import CarteleraCard from "../components/CarteleraCard";
-import CarteleraSlider from "../components/CarteleraSlider";
-import CarteleraModal from "../components/CarteleraModal";
-
-import { commonStyles } from "../../../theme";
+import { useMemo, useState, useCallback } from 'react';
+import { FlatList, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useAppSelector, useAppDispatch } from '../../../redux/hooks';
+import { cargarPeliculas } from '../../../redux/thunks/peliculaThunks';
+import type { Pelicula } from '../../../types/Pelicula';
+import Filtros from '../../../components/filtro/Filtros';
+import CarteleraCard from '../components/CarteleraCard';
+import CarteleraSlider from '../components/CarteleraSlider';
+import CarteleraModal from '../components/CarteleraModal';
+import { commonStyles } from '../../../theme';
 
 export default function CarteleraScreen() {
+    const dispatch = useAppDispatch();
+
     const [peliculaSeleccionada, setPeliculaSeleccionada] = useState<Pelicula | null>(null);
-    const [busqueda, setBusqueda] = useState("");
-    const [generoSeleccionado, setGeneroSeleccionado] = useState("");
-    const [clasificacionSeleccionada, setClasificacionSeleccionada] = useState("");
+    const [busqueda, setBusqueda] = useState('');
+    const [generoSeleccionado, setGeneroSeleccionado] = useState('');
+    const [clasificacionSeleccionada, setClasificacionSeleccionada] = useState('');
     const [salaSeleccionada, setSalaSeleccionada] = useState<number | null>(null);
-    const [estadoSeleccionado, setEstadoSeleccionado] = useState<"todos" | "disponible" | "noDisponible">("disponible");
-    const peliculas = useAppSelector((state) => state.pelicula);
-    const funciones = useAppSelector((state) => state.funcion);
-    const salas = useAppSelector((state) => state.sala);
-    const peliculasConFunciones = peliculas.filter((pelicula) => funciones.some((funcion) => funcion.peliculaId === pelicula.id));
-    const peliculasDestacadas = peliculas.filter((pelicula) => {
-        const numFunciones = funciones.filter((funcion) => funcion.peliculaId === pelicula.id).length;
+    const [estadoSeleccionado, setEstadoSeleccionado] = useState<'todos' | 'disponible' | 'noDisponible'>('disponible');
+    const peliculas = useAppSelector(state => state.pelicula.lista);
+    const funciones = useAppSelector(state => state.funcion);
+    const salas = useAppSelector(state => state.sala);
+
+    useFocusEffect(
+        useCallback(() => {
+            dispatch(cargarPeliculas());
+        }, [dispatch])
+    );
+
+    const peliculasConFunciones = peliculas.filter(pelicula =>
+        funciones.some(funcion => funcion.peliculaId === pelicula.id)
+    );
+
+    const peliculasDestacadas = peliculas.filter(pelicula => {
+        const numFunciones = funciones.filter(
+            funcion => funcion.peliculaId === pelicula.id
+        ).length;
+
         return numFunciones > 3;
     });
 
     const generos = useMemo(
-        () => [...new Set(peliculas.map((pelicula) => pelicula.genero))],
+        () => [...new Set(peliculas.map(pelicula => pelicula.genero))],
         [peliculas]
     );
 
     const clasificaciones = useMemo(
         () => [
             ...new Set(
-                peliculas.map((pelicula) => pelicula.clasificacion)
+                peliculas.map(pelicula => pelicula.clasificacion)
             ),
         ],
         [peliculas]
@@ -43,50 +57,45 @@ export default function CarteleraScreen() {
 
     const obtenerSalasDePelicula = (peliculaId: number) => {
         const salaIds = funciones
-            .filter((funcion) => funcion.peliculaId === peliculaId)
-            .map((funcion) => funcion.salaId);
+            .filter(funcion => funcion.peliculaId === peliculaId)
+            .map(funcion => funcion.salaId);
 
-        return salas.filter((sala) => salaIds.includes(sala.id));
+        return salas.filter(sala => salaIds.includes(sala.id));
     };
 
     const peliculasFiltradas = useMemo(() => {
         const texto = busqueda.trim().toLowerCase();
 
-        return peliculasConFunciones.filter((pelicula) => {
+        return peliculasConFunciones.filter(pelicula => {
             const salasDePelicula = obtenerSalasDePelicula(pelicula.id);
 
             const nombresSalas = salasDePelicula
-                .map((sala) => sala.nombre.toLowerCase())
-                .join(" ");
+                .map(sala => sala.nombre.toLowerCase())
+                .join(' ');
 
             const coincideBusqueda =
-                texto === "" ||
+                texto === '' ||
                 pelicula.nombre.toLowerCase().includes(texto) ||
                 pelicula.genero.toLowerCase().includes(texto) ||
                 pelicula.clasificacion.toLowerCase().includes(texto) ||
                 nombresSalas.includes(texto);
 
             const coincideGenero =
-                generoSeleccionado === "" ||
+                generoSeleccionado === '' ||
                 pelicula.genero === generoSeleccionado;
 
             const coincideClasificacion =
-                clasificacionSeleccionada === "" ||
-                pelicula.clasificacion ===
-                clasificacionSeleccionada;
+                clasificacionSeleccionada === '' ||
+                pelicula.clasificacion === clasificacionSeleccionada;
 
             const coincideSala =
                 salaSeleccionada === null ||
-                salasDePelicula.some(
-                    (sala) => sala.id === salaSeleccionada
-                );
+                salasDePelicula.some(sala => sala.id === salaSeleccionada);
 
             const coincideEstado =
-                estadoSeleccionado === "todos" ||
-                (estadoSeleccionado === "disponible" &&
-                    pelicula.disponible) ||
-                (estadoSeleccionado === "noDisponible" &&
-                    !pelicula.disponible);
+                estadoSeleccionado === 'todos' ||
+                (estadoSeleccionado === 'disponible' && pelicula.disponible) ||
+                (estadoSeleccionado === 'noDisponible' && !pelicula.disponible);
 
             return (
                 coincideBusqueda &&
@@ -157,10 +166,7 @@ export default function CarteleraScreen() {
                     <Text
                         style={[
                             commonStyles.text,
-                            {
-                                textAlign: "center",
-                                marginTop: 20,
-                            },
+                            { textAlign: 'center', marginTop: 20 },
                         ]}
                     >
                         No se encontraron películas con los filtros seleccionados.
