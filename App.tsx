@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider, useDispatch, useSelector } from 'react-redux';
@@ -11,7 +10,8 @@ import { store, persistor, type RootState, type AppDispatch } from './src/redux/
 import { restaurarSesion, logout } from './src/redux/slices/authSlice';
 import { obtenerToken, eliminarToken } from './src/services/secureStorage';
 import * as Notifications from 'expo-notifications';
-
+import { notificacionesService } from './src/services/notificaciones.service';
+import { dispositivosService } from './src/services/dispositivos.service';
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
@@ -24,7 +24,7 @@ function ContenidoApp() {
   const dispatch = useDispatch<AppDispatch>();
   const usuario = useSelector((state: RootState) => state.auth.usuario);
   const [sesionVerificada, setSesionVerificada] = useState(false);
-
+  const usuarioInicial = useRef(usuario);
   useEffect(() => {
     let cancelado = false;
 
@@ -33,7 +33,34 @@ function ContenidoApp() {
         const token = await obtenerToken();
 
         if (cancelado) return;
-        if (token && usuario) { dispatch(restaurarSesion(token)); }
+        if (token && usuarioInicial.current) {
+  dispatch(restaurarSesion(token));
+
+  void (async () => {
+    try {
+      const expoPushToken =
+        await notificacionesService.obtenerExpoPushToken();
+
+      if (cancelado || !expoPushToken) return;
+
+      const respuesta = await dispositivosService.registrar(expoPushToken);
+
+      if (!cancelado) {
+        console.log(
+          'Dispositivo push registrado al restaurar sesión:',
+          respuesta.message
+        );
+      }
+    } catch (error) {
+      if (!cancelado) {
+        console.error(
+          'No se pudo registrar el dispositivo al restaurar sesión:',
+          error
+        );
+      }
+    }
+  })();
+}
         else {
           if (token) await eliminarToken();
           if (cancelado) return;
@@ -52,7 +79,7 @@ function ContenidoApp() {
     return () => {
       cancelado = true;
     };
-  }, [dispatch, usuario]);
+  }, [dispatch]);
 
   if (!sesionVerificada) return null;
 

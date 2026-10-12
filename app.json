@@ -12,6 +12,7 @@
     },
     "android": {
       "package": "com.alealvarez75.sgcinema",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#1B1C20",
         "foregroundImage": "./assets/android-icon-foreground.png",

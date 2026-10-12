@@ -10,9 +10,39 @@ import { useAppDispatch } from '../../../redux/hooks';
 import { login } from '../../../redux/slices/authSlice';
 import { usuariosService } from '../../../services/usuarios.service';
 import { guardarToken } from '../../../services/secureStorage';
-
+import { notificacionesService } from '../../../services/notificaciones.service';
+import { dispositivosService } from '../../../services/dispositivos.service';
+import { ApiError } from '../../../services/api';
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
+const registrarDispositivoPush = async (): Promise<void> => {
+    try {
+        const expoPushToken =
+            await notificacionesService.obtenerExpoPushToken();
 
+        if (!expoPushToken) {
+            console.warn(
+                'No se obtuvo un Expo Push Token para registrar el dispositivo.'
+            );
+            return;
+        }
+
+        const respuesta = await dispositivosService.registrar(expoPushToken);
+
+        console.log('Registro de dispositivo push:', respuesta.message);
+    } catch (error) {
+        if (error instanceof ApiError) {
+            console.error('Error al registrar dispositivo push:', {
+                status: error.status,
+                mensaje: error.message,
+            });
+        } else {
+            console.error(
+                'No se pudo registrar el dispositivo para notificaciones push:',
+                error
+            );
+        }
+    }
+};
 export default function LoginScreen({ navigation, route }: Props) {
     const dispatch = useAppDispatch();
     const [usuario, setUsuario] = useState('');
@@ -56,6 +86,7 @@ export default function LoginScreen({ navigation, route }: Props) {
                 usuario: usuarioAutenticado,
                 token: respuesta.token,
             }));
+            void registrarDispositivoPush();
 
             Toast.show({
                 type: 'success',

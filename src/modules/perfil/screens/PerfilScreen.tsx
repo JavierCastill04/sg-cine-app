@@ -20,6 +20,7 @@ import {
     UserPlus,
 } from 'lucide-react-native';
 import { notificacionesService } from '../../../services/notificaciones.service';
+import { dispositivosService } from '../../../services/dispositivos.service';
 import type { RootStackParamList } from '../../../navigation/types';
 import { commonStyles, colores } from '../../../theme';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
@@ -94,10 +95,32 @@ export default function PerfilScreen() {
         }
     };
 
+
 const cerrarSesion = async () => {
     try {
+        // Eliminar el dispositivo del backend antes de borrar el JWT.
+        try {
+            const expoPushToken =
+                await notificacionesService.obtenerExpoPushToken();
+
+            if (expoPushToken) {
+                await dispositivosService.eliminar(expoPushToken);
+
+                console.log(
+                    'Dispositivo push eliminado correctamente.'
+                );
+            }
+        } catch (error) {
+            console.error(
+                'No se pudo eliminar el dispositivo push:',
+                error
+            );
+        }
+
+        // Eliminar el token de autenticación.
         await eliminarToken();
 
+        // Cancelar los recordatorios locales pendientes.
         try {
             await notificacionesService.cancelarTodosLosRecordatorios();
         } catch (error) {
@@ -107,6 +130,7 @@ const cerrarSesion = async () => {
             );
         }
 
+        // Limpiar los datos de sesión.
         dispatch(limpiarVentas());
         dispatch(logout());
     } catch (error) {

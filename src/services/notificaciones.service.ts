@@ -1,10 +1,11 @@
 
 import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 const CLAVE_RECORDATORIOS = '@sgcine:recordatorios';
-
+const EAS_PROJECT_ID = 'b0fa4808-e5d7-4556-8753-366df54b3e5c';
 type RecordatoriosGuardados = Record<string, string>;
 
 export const notificacionesService = {
@@ -26,6 +27,37 @@ export const notificacionesService = {
 
         return nuevosPermisos.granted;
     },
+    async obtenerExpoPushToken(): Promise<string | null> {
+    if (!Device.isDevice) {
+        console.warn(
+            'Las notificaciones push requieren un dispositivo físico.'
+        );
+        return null;
+    }
+
+    const permisos = await this.configurar();
+
+    if (!permisos) {
+        console.warn(
+            'No se concedieron permisos para las notificaciones push.'
+        );
+        return null;
+    }
+
+    try {
+        const resultado = await Notifications.getExpoPushTokenAsync({
+            projectId: EAS_PROJECT_ID,
+        });
+
+        return resultado.data;
+    } catch (error) {
+        console.error(
+            'No se pudo obtener el Expo Push Token:',
+            error
+        );
+        return null;
+    }
+},
 
     async notificarCompra(pelicula: string): Promise<string> {
         return Notifications.scheduleNotificationAsync({
