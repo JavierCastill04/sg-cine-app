@@ -3,6 +3,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { UserRound, LogIn, LogOut, ShieldCheck } from 'lucide-react-native';
+import {
+    UserRound,
+    LogIn,
+    LogOut,
+    ShieldCheck,
+    UserPlus,
+} from 'lucide-react-native';
+
 import type { RootStackParamList } from '../../../navigation/types';
 import { commonStyles, colores } from '../../../theme';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
@@ -59,6 +67,26 @@ export default function PerfilScreen() {
                                 Iniciar sesión
                             </Text>
                         </TouchableOpacity>
+                        
+<TouchableOpacity
+    style={[
+        commonStyles.button,
+        commonStyles.profileButton,
+    ]}
+    onPress={() => navigation.navigate('Registro')}
+    accessibilityRole="button"
+    accessibilityLabel="Crear una cuenta"
+>
+    <UserPlus
+        size={20}
+        color={colores.negro}
+    />
+
+    <Text style={commonStyles.buttonText}>
+        Crear una cuenta
+    </Text>
+</TouchableOpacity>
+
                     </View>
                 ) : (
                     <View style={commonStyles.card}>
