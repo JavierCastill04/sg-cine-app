@@ -566,4 +566,36 @@ cinesDistancia: {
         ...tipografia.body,
         color: colores.claro,
     },
+        perfilNotificacionesCard: {
+        marginTop: espaciado.md,
+    },
+
+    perfilNotificacionesFila: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: espaciado.md,
+    },
+
+    perfilNotificacionesContenido: {
+        flex: 1,
+    },
+
+    perfilNotificacionesTitulo: {
+        ...tipografia.body,
+        color: colores.claro,
+        fontWeight: '700',
+        marginBottom: espaciado.xs,
+    },
+
+    perfilNotificacionesDescripcion: {
+        ...tipografia.body,
+        color: colores.textoSecundario,
+        fontSize: 13,
+    },
+    perfilScrollContenido: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingVertical: espaciado.lg,
+},
 });

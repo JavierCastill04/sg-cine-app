@@ -1,69 +1,118 @@
-import { useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+
+import { useCallback, useRef, useState } from "react";
+import {
+    ActivityIndicator,
+    Pressable,
+    ScrollView,
+    Text,
+    View,
+} from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { marcarTokenUsado } from "../../../redux/slices/ventaSlice";
+import { useFocusEffect } from "@react-navigation/native";
+import {
+    CheckCircle2,
+    XCircle,
+    Info,
+} from "lucide-react-native";
+
+import { reservasService } from "../../../services/reservas.service";
 import { colores } from "../../../theme";
 import styles from "../../../theme/scanerStyles";
 
 export default function EscanerScreen() {
     const [permission, requestPermission] = useCameraPermissions();
 
-    const ventas = useAppSelector(state => state.venta);
-    const dispatch = useAppDispatch();
-
     const [escaneado, setEscaneado] = useState(false);
+    const [validando, setValidando] = useState(false);
     const [mensaje, setMensaje] = useState("");
     const [valido, setValido] = useState<boolean | null>(null);
 
-    const manejarEscaneo = ({ data }: { data: string }) => {
-        if (escaneado) {
+    const procesandoRef = useRef(false);
+    const sesionRef = useRef(0);
+
+    const reiniciarEscaner = useCallback(() => {
+        procesandoRef.current = false;
+        setEscaneado(false);
+        setValidando(false);
+        setMensaje("");
+        setValido(null);
+    }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            reiniciarEscaner();
+
+            return () => {
+                // Invalida las respuestas pendientes al salir.
+                sesionRef.current += 1;
+                procesandoRef.current = true;
+                setEscaneado(true);
+            };
+        }, [reiniciarEscaner])
+    );
+
+    const manejarEscaneo = async ({ data }: { data: string }) => {
+        if (procesandoRef.current) {
             return;
         }
 
+        procesandoRef.current = true;
         setEscaneado(true);
 
-        const token = data.trim();
+        const sesionActual = sesionRef.current;
+        const codigo = data.trim();
 
-        const venta = ventas.find(venta => venta.token === token);
-
-        if (!venta) {
+        if (!codigo) {
             setValido(false);
-            setMensaje("Boleto inválido");
+            setMensaje("El código QR está vacío.");
             return;
         }
 
-        const fechaExpiracion = venta.tokenExpira
-    ? new Date(venta.tokenExpira).getTime()
-    : NaN;
+        setValidando(true);
+        setMensaje("Consultando el servidor...");
+        setValido(null);
 
-      const estaVencido =
-    !Number.isFinite(fechaExpiracion) ||
-    fechaExpiracion <= Date.now();
+        try {
+            const respuesta = await reservasService.validar(codigo);
 
-        if (venta.tokenUsado) {
+            if (sesionActual !== sesionRef.current) {
+                return;
+            }
+
+            if (respuesta.estado === "utilizada") {
+                setValido(true);
+                setMensaje("Acceso autorizado.");
+            } else {
+                setValido(false);
+                setMensaje(
+                    "El servidor no confirmó la validación del boleto."
+                );
+            }
+        } catch (error) {
+            if (sesionActual !== sesionRef.current) {
+                return;
+            }
+
             setValido(false);
-            setMensaje("Boleto ya utilizado");
-            return;
+            setMensaje(
+                error instanceof Error
+                    ? error.message
+                    : "No se pudo validar el boleto."
+            );
+        } finally {
+            if (sesionActual === sesionRef.current) {
+                setValidando(false);
+            }
         }
-
-        if (estaVencido) {
-            setValido(false);
-            setMensaje("Boleto vencido");
-            return;
-        }
-
-        dispatch(marcarTokenUsado(token));
-
-        setValido(true);
-        setMensaje("Boleto válido");
     };
 
     const escanearOtro = () => {
-        setEscaneado(false);
-        setMensaje("");
-        setValido(null);
+        if (validando) {
+            return;
+        }
+
+        reiniciarEscaner();
     };
 
     if (!permission) {
@@ -105,95 +154,137 @@ export default function EscanerScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <Text style={styles.titulo}>
-                Validación de boletos
-            </Text>
+            <ScrollView
+                contentContainerStyle={styles.contenido}
+                keyboardShouldPersistTaps="handled"
+            >
+                <Text style={styles.titulo}>
+                    Validación de boletos
+                </Text>
 
-            <Text style={styles.descripcion}>
-                Escanea el código QR del boleto del cliente.
-            </Text>
+                <Text style={styles.descripcion}>
+                    Escanea el código QR del boleto del cliente.
+                </Text>
 
-            <View style={styles.scannerContainer}>
-                <CameraView
-                    style={styles.camera}
-                    facing="back"
-                    active={true}
-                    barcodeScannerSettings={{
-                        barcodeTypes: ["qr"]
-                    }}
-                    onBarcodeScanned={
-                        escaneado ? undefined : manejarEscaneo
-                    }
-                    onMountError={(error) => {
-                        console.log(
-                            "Error al iniciar cámara:",
-                            error.message
-                        );
+                <View style={styles.scannerContainer}>
+                    <CameraView
+                        style={styles.camera}
+                        facing="back"
+                        active={!escaneado}
+                        barcodeScannerSettings={{
+                            barcodeTypes: ["qr"],
+                        }}
+                        onBarcodeScanned={
+                            escaneado ? undefined : manejarEscaneo
+                        }
+                        onMountError={error => {
+                            console.log(
+                                "Error al iniciar cámara:",
+                                error.message
+                            );
 
-                        setMensaje(
-                            `Error de cámara: ${error.message}`
-                        );
-
-                        setValido(false);
-                    }}
-                />
-
-                <View style={styles.marco}>
-                    <View
-                        style={[
-                            styles.esquina,
-                            styles.esquinaSuperiorIzquierda
-                        ]}
+                            setMensaje(
+                                `Error de cámara: ${error.message}`
+                            );
+                            setValido(false);
+                        }}
                     />
 
                     <View
-                        style={[
-                            styles.esquina,
-                            styles.esquinaSuperiorDerecha
-                        ]}
-                    />
-
-                    <View
-                        style={[
-                            styles.esquina,
-                            styles.esquinaInferiorIzquierda
-                        ]}
-                    />
-
-                    <View
-                        style={[
-                            styles.esquina,
-                            styles.esquinaInferiorDerecha
-                        ]}
-                    />
+                        style={styles.marco}
+                        pointerEvents="none"
+                    >
+                        <View
+                            style={[
+                                styles.esquina,
+                                styles.esquinaSuperiorIzquierda,
+                            ]}
+                        />
+                        <View
+                            style={[
+                                styles.esquina,
+                                styles.esquinaSuperiorDerecha,
+                            ]}
+                        />
+                        <View
+                            style={[
+                                styles.esquina,
+                                styles.esquinaInferiorIzquierda,
+                            ]}
+                        />
+                        <View
+                            style={[
+                                styles.esquina,
+                                styles.esquinaInferiorDerecha,
+                            ]}
+                        />
+                    </View>
                 </View>
-            </View>
 
-            {mensaje !== "" && (
-                <View
-                    style={[
-                        styles.resultado,
-                        valido
-                            ? styles.resultadoValido
-                            : styles.resultadoInvalido
-                    ]}
-                >
-                    <Text style={styles.resultadoTexto}>
-                        {mensaje}
-                    </Text>
-                </View>
-            )}
+                {validando && (
+                    <ActivityIndicator
+                        size="large"
+                        color={colores.enfasis}
+                    />
+                )}
 
-            {escaneado && (
-                <Pressable
-                    style={styles.boton}
-                    onPress={escanearOtro}
-                >
-                    <Text style={styles.botonTexto}>
-                        Escanear otro boleto
-                    </Text>
-                </Pressable>
-            )}
+                {mensaje !== "" && (
+                    <View
+                        style={[
+                            styles.resultado,
+                            valido === true
+                                ? styles.resultadoValido
+                                : valido === false
+                                    ? styles.resultadoInvalido
+                                    : styles.resultadoInfo,
+                        ]}
+                    >
+                        <View style={styles.resultadoIcono}>
+                            {valido === true ? (
+                                <CheckCircle2
+                                    size={26}
+                                    color="#5EE0A0"
+                                />
+                            ) : valido === false ? (
+                                <XCircle
+                                    size={26}
+                                    color="#FF8B8B"
+                                />
+                            ) : (
+                                <Info
+                                    size={26}
+                                    color={colores.enfasis}
+                                />
+                            )}
+                        </View>
+
+                        <View style={styles.resultadoContenido}>
+                            <Text style={styles.resultadoTitulo}>
+                                {valido === true
+                                    ? "Boleto válido"
+                                    : valido === false
+                                        ? "Boleto rechazado"
+                                        : "Validando boleto"}
+                            </Text>
+
+                            <Text style={styles.resultadoTexto}>
+                                {mensaje}
+                            </Text>
+                        </View>
+                    </View>
+                )}
+
+                {escaneado && !validando && (
+                    <Pressable
+                        style={styles.boton}
+                        onPress={escanearOtro}
+                    >
+                        <Text style={styles.botonTexto}>
+                            Escanear otro boleto
+                        </Text>
+                    </Pressable>
+                )}
+            </ScrollView>
         </SafeAreaView>
     );
 }

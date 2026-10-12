@@ -10,7 +10,16 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { store, persistor, type RootState, type AppDispatch } from './src/redux/store';
 import { restaurarSesion, logout } from './src/redux/slices/authSlice';
 import { obtenerToken, eliminarToken } from './src/services/secureStorage';
+import * as Notifications from 'expo-notifications';
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 function ContenidoApp() {
   const dispatch = useDispatch<AppDispatch>();
   const usuario = useSelector((state: RootState) => state.auth.usuario);

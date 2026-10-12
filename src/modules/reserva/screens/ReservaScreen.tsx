@@ -15,7 +15,9 @@ import { BarraProgreso, FormBotones, PasoAsientos, PasoConfirmacion, PasoContain
 import GeneradorQR from "../../ventas/GeneradorQR";
 import { generarBoleto } from "../../ventas/generarBoleto";
 import { enviarBoleto } from "../../ventas/enviarBoleto";
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { funcionesService } from '../../../services/funciones.service';
+import { notificacionesService } from '../../../services/notificaciones.service';
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const pasos = ["Función", "Asientos", "Confirmar", "Boleto"];
@@ -34,6 +36,37 @@ const convertirAsientoApi = (asientoId: string): string => {
     }
 
     return `${coincidencia[1]}${coincidencia[2]}`;
+};
+const CLAVE_MODO_DEMOSTRACION = '@sgcine:modoDemostracionNotificaciones';
+
+const programarNotificacionesReserva = async (
+    codigoReserva: string,
+    funcionId: number,
+    nombrePelicula: string
+): Promise<void> => {
+    const permisos = await notificacionesService.configurar();
+
+    if (!permisos) {
+        return;
+    }
+
+    await notificacionesService.notificarCompra(nombrePelicula);
+
+    const [funcionApi, preferencia] = await Promise.all([
+        funcionesService.obtenerPorId(funcionId),
+        AsyncStorage.getItem(CLAVE_MODO_DEMOSTRACION),
+    ]);
+
+    if (funcionApi.estado !== 'activa') {
+        return;
+    }
+
+    await notificacionesService.programarRecordatorio(
+        codigoReserva,
+        nombrePelicula,
+        funcionApi.fechaHora,
+        preferencia === 'true'
+    );
 };
 
 export default function ReservaScreen({ route }: any) {
@@ -269,6 +302,16 @@ export default function ReservaScreen({ route }: any) {
             setVenta(nuevaVenta);
             setPdfUri(null);
             setPaso(4);
+            void programarNotificacionesReserva(
+    reserva.codigo,
+    reserva.funcionId,
+    reserva.pelicula ?? 'tu pelicula'
+).catch(error => {
+    console.error(
+        'La reserva se confirmó, pero no se pudieron programar las notificaciones:',
+        error
+    );
+});
         } catch (error) {
             const mensaje =
                 typeof error === "string"
