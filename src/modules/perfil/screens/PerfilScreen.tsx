@@ -2,15 +2,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { UserRound, LogIn, LogOut, ShieldCheck } from 'lucide-react-native';
-import {
-    UserRound,
-    LogIn,
-    LogOut,
-    ShieldCheck,
-    UserPlus,
-} from 'lucide-react-native';
-
+import { UserRound, LogIn, LogOut, ShieldCheck, UserPlus } from 'lucide-react-native';
 import type { RootStackParamList } from '../../../navigation/types';
 import { commonStyles, colores } from '../../../theme';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
