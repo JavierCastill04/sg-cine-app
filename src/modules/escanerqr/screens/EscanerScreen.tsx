@@ -34,8 +34,13 @@ export default function EscanerScreen() {
             return;
         }
 
-        const estaVencido =
-            new Date(venta.tokenExpira).getTime() <= Date.now();
+        const fechaExpiracion = venta.tokenExpira
+    ? new Date(venta.tokenExpira).getTime()
+    : NaN;
+
+      const estaVencido =
+    !Number.isFinite(fechaExpiracion) ||
+    fechaExpiracion <= Date.now();
 
         if (venta.tokenUsado) {
             setValido(false);

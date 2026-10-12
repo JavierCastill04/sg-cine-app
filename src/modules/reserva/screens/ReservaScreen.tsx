@@ -352,9 +352,11 @@ export default function ReservaScreen({ route }: any) {
                                     await enviarBoleto(venta, pdfUri);
 
                                     Alert.alert(
-                                        "Boleto enviado",
-                                        `El boleto fue enviado a ${venta.usuario.correo}.`
-                                    );
+    "Boleto enviado",
+    venta.usuario?.correo
+        ? `El boleto fue enviado a ${venta.usuario.correo}.`
+        : "El boleto se envió correctamente."
+);
                                 } catch (error) {
                                     Alert.alert(
                                         "Error",
