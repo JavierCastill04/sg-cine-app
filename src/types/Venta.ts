@@ -1,11 +1,8 @@
+import type { Usuario } from "./Usuario";
 export interface Venta {
     id: number;
     funcionId: number;
-    cliente: {
-        nombre: string;
-        correo: string;
-        telefono: string;
-    };
+    usuario: Usuario;
     asientos: string[];
     cantidadBoletos: number;
     total: number;

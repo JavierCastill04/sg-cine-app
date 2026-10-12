@@ -5,7 +5,6 @@ export const enviarBoleto = async (
     venta: Venta,
     pdfUri: string
 ): Promise<void> => {
-
     const disponible = await MailComposer.isAvailableAsync();
 
     if (!disponible) {
@@ -14,17 +13,29 @@ export const enviarBoleto = async (
         );
     }
 
-    await MailComposer.composeAsync({
-        recipients: [venta.cliente.correo],
+    const resultado = await MailComposer.composeAsync({
+        recipients: [venta.usuario.correo],
         subject: "Tu boleto - Cine App",
-        body: `Hola ${venta.cliente.nombre},
+        body: `Hola ${venta.usuario.nombre},
 
-        Tu compra se realizó correctamente.
+Tu reserva se realizó correctamente.
 
-        Adjuntamos tu boleto de cine con el código QR. 
-        Preséntalo en la entrada para acceder a tu función.
+Adjuntamos tu boleto de cine con el código QR.
+Preséntalo en la entrada para acceder a tu función.
 
-        ¡Gracias por comprar con Cine App!`,
-        attachments: [pdfUri]
+¡Gracias por reservar con Cine App!`,
+        attachments: [pdfUri],
     });
+
+    if (resultado.status === "sent") {
+        return;
+    }
+
+    if (resultado.status === "cancelled") {
+        throw new Error("El envío del correo fue cancelado.");
+    }
+
+    throw new Error(
+        "El correo no se ha confirmado como enviado."
+    );
 };

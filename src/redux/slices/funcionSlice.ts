@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { Funcion } from '../../types/Funcion';
-import { cargarFunciones, cargarFuncionPorId, crearFuncionThunk, reprogramarFuncionThunk, cancelarFuncionThunk } from '../thunks/funcionThunks';
+import { cargarFunciones, cargarFuncionPorId, cargarAsientosFuncion, crearFuncionThunk, reprogramarFuncionThunk, cancelarFuncionThunk } from '../thunks/funcionThunks';
 
 const initialState: Funcion[] = [];
 
@@ -87,6 +87,16 @@ const funcionSlice = createSlice({
 
                 if (funcion) {
                     funcion.estado = action.payload.estado;
+                }
+            })
+
+            .addCase(cargarAsientosFuncion.fulfilled, (state, action) => {
+                const funcion = state.find(
+                    f => f.id === action.payload.funcionId
+                );
+
+                if (funcion) {
+                    funcion.estadoAsientos = action.payload.estadoAsientos;
                 }
             });
     },

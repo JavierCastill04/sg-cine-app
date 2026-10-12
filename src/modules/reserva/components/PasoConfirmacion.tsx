@@ -2,20 +2,15 @@ import { Text, View } from "react-native";
 import type { Funcion } from "../../../types/Funcion";
 import type { Pelicula } from "../../../types/Pelicula";
 import type { Sala } from "../../../types/Sala";
+import type { Usuario } from "../../../types/Usuario";
 import { commonStyles, colores } from "../../../theme";
-
-interface Cliente {
-    nombre: string;
-    correo: string;
-    telefono: string;
-}
 
 interface Props {
     pelicula: Pelicula;
     sala: Sala;
     funcion: Funcion;
     seleccionados: string[];
-    cliente: Cliente;
+    usuario: Usuario;
     total: number;
 }
 
@@ -24,7 +19,7 @@ export default function PasoConfirmacion({
     sala,
     funcion,
     seleccionados,
-    cliente,
+    usuario,
     total
 }: Props) {
     return (
@@ -34,16 +29,35 @@ export default function PasoConfirmacion({
             </Text>
 
             <View style={commonStyles.card}>
-                <Text style={commonStyles.cardTitle}>{pelicula.nombre}</Text>
-                <Text style={commonStyles.secondaryText}>{sala.nombre}</Text>
-                <Text style={commonStyles.secondaryText}>{funcion.fecha} - {funcion.horaInicio}</Text>
+                <Text style={commonStyles.cardTitle}>
+                    {pelicula.nombre}
+                </Text>
+                <Text style={commonStyles.secondaryText}>
+                    {sala.nombre}
+                </Text>
+                <Text style={commonStyles.secondaryText}>
+                    {funcion.fecha} - {funcion.horaInicio}
+                </Text>
+
                 <Text style={styles.titulo}>Asientos</Text>
-                <Text style={commonStyles.secondaryText}>{seleccionados.join(", ")}</Text>
-                <Text style={styles.titulo}>Cliente </Text>
-                <Text style={commonStyles.secondaryText}>{cliente.nombre}</Text>
-                <Text style={commonStyles.secondaryText}>{cliente.correo}</Text>
-                <Text style={commonStyles.secondaryText}>{cliente.telefono}</Text>
-                <Text style={styles.total}>{seleccionados.length} boleto(s) — ${total.toFixed(2)}</Text>
+                <Text style={commonStyles.secondaryText}>
+                    {seleccionados.join(", ")}
+                </Text>
+
+                <Text style={styles.titulo}>Usuario</Text>
+                <Text style={commonStyles.secondaryText}>
+                    {usuario.nombre}
+                </Text>
+                <Text style={commonStyles.secondaryText}>
+                    {usuario.correo}
+                </Text>
+
+                <Text style={styles.total}>
+                    {seleccionados.length} boleto(s) — ${total.toFixed(2)}
+                </Text>
+                <Text style={commonStyles.secondaryText}>
+                    El total definitivo se confirmará al completar la reserva.
+                </Text>
             </View>
         </>
     );

@@ -26,9 +26,8 @@ export default function Boleto({ venta, pelicula, sala, funcion }: Props) {
             <Text style={commonStyles.cardTitle}>Asientos</Text>
             <Text style={commonStyles.secondaryText}>{venta.asientos.join(", ")}</Text>
             <Text style={[commonStyles.cardTitle, { marginTop: 15 }]}>Cliente</Text>
-            <Text style={commonStyles.secondaryText}>{venta.cliente.nombre}</Text>
-            <Text style={commonStyles.secondaryText}>{venta.cliente.correo}</Text>
-            <Text style={commonStyles.secondaryText}>{venta.cliente.telefono}</Text>
+            <Text style={commonStyles.secondaryText}>{venta.usuario.nombre}</Text>
+            <Text style={commonStyles.secondaryText}>{venta.usuario.correo}</Text>
             <Text style={[commonStyles.cardTitle, { marginTop: 15 }]}>Total</Text>
             <Text style={commonStyles.secondaryText}>{venta.cantidadBoletos} boleto(s) — ${venta.total.toFixed(2)}</Text>
 

@@ -26,11 +26,18 @@ export interface FiltrosFunciones {
     cineId?: number;
 }
 
+export interface AsientoFuncionApi {
+    asiento: string;
+    estado: 'libre' | 'ocupado';
+}
+
 export interface AsientosFuncion {
     funcionId: number;
+    estado: 'activa' | 'cancelada';
+    sala: string;
     filas: number;
     columnas: number;
-    asientosOcupados: string[];
+    asientos: AsientoFuncionApi[];
 }
 
 interface RespuestaFuncion {
@@ -72,15 +79,15 @@ export const funcionesService = {
         const query = params.toString();
 
         return api.get<FuncionApi[]>(
-            query ? `${ BASE_URL }?${ query } ` : BASE_URL
+            query ? `${BASE_URL}?${query}` : BASE_URL
         );
     },
 
     obtenerPorId: (id: number) =>
-        api.get<FuncionApi>(`${ BASE_URL }/${id}`),
+        api.get<FuncionApi>(`${BASE_URL}/${id}`),
 
-obtenerAsientos: (id: number) =>
-    api.get<AsientosFuncion>(`${BASE_URL}/${id}/asientos`),
+    obtenerAsientos: (id: number) =>
+        api.get<AsientosFuncion>(`${BASE_URL}/${id}/asientos`),
 
     crear: (datos: CrearFuncionRequest) =>
         api.post<RespuestaFuncion>(
@@ -89,17 +96,17 @@ obtenerAsientos: (id: number) =>
             true
         ),
 
-        actualizar: (id: number, datos: CrearFuncionRequest) =>
-            api.put<RespuestaFuncion>(
-                `${BASE_URL}/${id}`,
-                datos,
-                true
-            ),
+    actualizar: (id: number, datos: CrearFuncionRequest) =>
+        api.put<RespuestaFuncion>(
+            `${BASE_URL}/${id}`,
+            datos,
+            true
+        ),
 
-            cancelar: (id: number) =>
-                api.patch<RespuestaCancelacion>(
-                    `${BASE_URL}/${id}/cancelar`,
-                    undefined,
-                    true
-                ),
+    cancelar: (id: number) =>
+        api.patch<RespuestaCancelacion>(
+            `${BASE_URL}/${id}/cancelar`,
+            undefined,
+            true
+        ),
 };

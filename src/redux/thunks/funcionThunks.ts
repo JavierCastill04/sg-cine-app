@@ -1,6 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { funcionesService, type FuncionApi, type CrearFuncionRequest, type FiltrosFunciones, type AsientosFuncion, type RespuestaCancelacion, } from '../../services/funciones.service';
 import type { Funcion } from '../../types/Funcion';
+import type { EstadoAsiento } from '../../types/EstadoAsiento';
 
 const convertirFuncion = (funcion: FuncionApi): Funcion => {
     const fechaHora = new Date(funcion.fechaHora);
@@ -77,15 +78,35 @@ export const cargarFuncionPorId = createAsyncThunk<
     }
 );
 
+
 export const cargarAsientosFuncion = createAsyncThunk<
-    AsientosFuncion,
-    number,
+    { funcionId: number; estadoAsientos: EstadoAsiento[] },
+    { funcionId: number; salaId: number },
     { rejectValue: string }
 >(
     'funcion/cargarAsientos',
-    async (id, { rejectWithValue }) => {
+    async ({ funcionId, salaId }, { rejectWithValue }) => {
         try {
-            return await funcionesService.obtenerAsientos(id);
+            const respuesta = await funcionesService.obtenerAsientos(funcionId);
+
+            const estadoAsientos: EstadoAsiento[] = respuesta.asientos.map(
+                ({ asiento, estado }) => {
+                    const coincidencia = asiento.match(/^([A-Z]+)(\d+)$/);
+
+                    if (!coincidencia) {
+                        throw new Error(`Identificador de asiento inválido: ${asiento}`);
+                    }
+
+                    const [, fila, columna] = coincidencia;
+
+                    return {
+                        asientoId: `${salaId}-${fila}-${columna}`,
+                        estado: estado === 'ocupado' ? 'reservado' : 'disponible',
+                    };
+                }
+            );
+
+            return { funcionId, estadoAsientos };
         } catch (error) {
             return rejectWithValue(
                 error instanceof Error
