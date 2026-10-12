@@ -530,6 +530,40 @@ cinesDistancia: {
         color: colores.claro,
         fontSize: 13,
     },
+        funcionPickerContainer: {
+        backgroundColor: colores.superficie,
+        borderWidth: 1,
+        borderColor: colores.borde,
+        borderRadius: layout.radius,
+        overflow: 'hidden',
+    },
 
+    funcionPicker: {
+        color: colores.texto,
+        backgroundColor: colores.superficie,
+    },
 
+    funcionCampoTexto: {
+        ...tipografia.body,
+        color: colores.texto,
+    },
+
+    funcionCampoPlaceholder: {
+        ...tipografia.body,
+        color: colores.textoSecundario,
+    },
+
+    funcionCampoSoloLectura: {
+        backgroundColor: colores.secundario,
+        borderWidth: 1,
+        borderColor: colores.borde,
+        borderRadius: layout.radius,
+        paddingVertical: espaciado.md,
+        paddingHorizontal: espaciado.lg,
+    },
+
+    funcionTextoSoloLectura: {
+        ...tipografia.body,
+        color: colores.claro,
+    },
 });

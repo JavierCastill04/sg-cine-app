@@ -1,10 +1,16 @@
 import { useEffect } from 'react';
-import Toast from 'react-native-toast-message'
-import { Alert, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Film, Building2, ChartPie, Popcorn, QrCode, User, Lock, LockOpen } from 'lucide-react-native';
+import {
+    Film,
+    Building2,
+    ChartPie,
+    Popcorn,
+    QrCode,
+    DoorOpen,
+} from 'lucide-react-native';
 import Peliculas from '../modules/peliculas/screens/PeliculasScreen';
 import Salas from '../modules/salas/screens/SalasScreen';
 import Dashboard from '../modules/dashboard/screens/DashboardScreen';
@@ -13,8 +19,7 @@ import Escaner from '../modules/escanerqr/screens/EscanerScreen';
 import type { PersonalTabParamList, RootStackParamList } from './types';
 import { tabScreenOptions } from './navigationSyles';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import { activarBiometria, desactivarBiometria, logout } from '../redux/slices/authSlice';
-import { autenticarBiometria, biometriaDisponible } from '../modules/auth/utils/biometria';
+import { revocarAccesoPersonal } from '../redux/slices/authSlice';
 import { colores } from '../theme';
 
 
@@ -22,10 +27,8 @@ const Tab = createBottomTabNavigator<PersonalTabParamList>();
 
 export default function PersonalNavigator() {
     const dispatch = useAppDispatch();
-    const usuario = useAppSelector(state => state.auth.usuario);
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const autenticado = useAppSelector(state => state.auth.autenticado);
-    const biometriaActiva = useAppSelector(state => state.auth.biometriaActiva);
 
 
     useEffect(() => {
@@ -34,72 +37,25 @@ export default function PersonalNavigator() {
 
     if (!autenticado) { return null; }
 
-    const configurarBiometria = async () => {
 
-        if (!usuario) { return; }
-        const autenticado = await autenticarBiometria();
-        const disponible = await biometriaDisponible();
-        if (biometriaActiva) {
-            dispatch(desactivarBiometria());
-            Toast.show({ type: 'error', text1: 'Biometría desactivada', position: 'bottom', visibilityTime: 1500, bottomOffset: 100 });
-            return;
-        }
-        
-        if (!autenticado) {
-            Toast.show({ type: 'error', text1: 'Autenticación fallida', text2: 'No se pudo verificar tu identidad.', position: 'bottom', visibilityTime: 1500, bottomOffset: 100 });
-            return;
-        }
+const salirDePersonal = () => {
+    dispatch(revocarAccesoPersonal());
+};
 
-        if (!disponible) {
-            Toast.show({ type: 'error', text1: 'Biometría no disponible', text2: 'Configura un método biométrico en tu dispositivo.', position: 'bottom', visibilityTime: 1500, bottomOffset: 100 });
-            return;
-        }
-
-        dispatch(activarBiometria(usuario));
-        Toast.show({ type: 'success', text1: 'Biometría activada', position: 'bottom', visibilityTime: 1500, bottomOffset: 100 });
-    };
-
-    const cerrarSesion = () => {
-        Alert.alert(
-            'Cerrar sesión',
-            '¿Estás seguro de que deseas cerrar sesión?',
-            [
-                {
-                    text: 'Cancelar',
-                    style: 'cancel'
-                },
-                {
-                    text: 'Cerrar sesión',
-                    style: 'destructive',
-                    onPress: () => dispatch(logout())
-                }
-            ]
-        );
-    };
-
-    const headerRight = () => (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15, marginRight: 15 }}>
-            <TouchableOpacity onPress={configurarBiometria}>
-                {biometriaActiva === true && (
-                    <Lock
-                        size={24}
-                        color={colores.enfasis}
-                    />
-                )}
-                {biometriaActiva === false && (
-                    <LockOpen
-                        size={24}
-                        color={colores.textoSecundario}
-                    />
-                )}
-
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={cerrarSesion}>
-                <User size={24} color={colores.enfasis} />
-            </TouchableOpacity>
-        </View>
-    );
+const headerRight = () => (
+    <TouchableOpacity
+        onPress={salirDePersonal}
+        accessibilityRole="button"
+        accessibilityLabel="Salir de Personal"
+        hitSlop={10}
+        style={{ marginRight: 15 }}
+    >
+        <DoorOpen
+            size={24}
+            color={colores.enfasis}
+        />
+    </TouchableOpacity>
+);
 
     return (
         <Tab.Navigator
