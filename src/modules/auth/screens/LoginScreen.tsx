@@ -15,7 +15,8 @@ import type { RootStackParamList } from '../../../navigation/types';
 import { colores, commonStyles } from '../../../theme';
 import { useAppDispatch } from '../../../redux/hooks';
 import { login } from '../../../redux/slices/authSlice';
-import { usuariosData } from '../../../data/usuariosData';
+import { usuariosService } from '../../../services/usuarios.service';
+import { establecerToken } from '../../../services/api';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -27,62 +28,83 @@ export default function LoginScreen({
 
     const [usuario, setUsuario] = useState('');
     const [contraseña, setContraseña] = useState('');
+    const [cargando, setCargando] = useState(false);
 
     const funcionId = route.params?.funcionId;
 
-    const iniciarSesion = () => {
-        const nombreUsuario = usuario.trim().toLowerCase();
+    const iniciarSesion = async () => {
+        if (cargando) {
+            return;
+        }
 
-        if (!nombreUsuario || !contraseña) {
+        const correo = usuario.trim().toLowerCase();
+
+        if (!correo || !contraseña) {
             Toast.show({
                 type: 'error',
                 text1: 'Campos obligatorios',
-                text2: 'Ingresa tu usuario y contraseña',
+                text2: 'Ingresa tu correo y contraseña',
                 position: 'bottom',
             });
             return;
         }
 
-        const usuarioEncontrado = usuariosData.find(
-            item =>
-                item.usuario.toLowerCase() === nombreUsuario &&
-                item.contraseña === contraseña
-        );
+        setCargando(true);
 
-        if (!usuarioEncontrado) {
+        try {
+            const respuesta = await usuariosService.iniciarSesion({
+                correo,
+                clave: contraseña,
+            });
+
+            const usuarioAutenticado = {
+                id: respuesta.usuario.id,
+                usuario: respuesta.usuario.correo,
+                nombre: respuesta.usuario.nombre,
+                rol: respuesta.usuario.rol,
+            };
+
+            establecerToken(respuesta.token);
+
+            dispatch(
+                login({
+                    usuario: usuarioAutenticado,
+                    token: respuesta.token,
+                })
+            );
+
+            Toast.show({
+                type: 'success',
+                text1: 'Sesión iniciada',
+                text2: `Bienvenido, ${respuesta.usuario.nombre}`,
+                position: 'bottom',
+            });
+
+            if (funcionId !== undefined) {
+                navigation.replace('Reserva', {
+                    funcionId,
+                    pasoInicial: 2,
+                });
+                return;
+            }
+
+            if (navigation.canGoBack()) {
+                navigation.goBack();
+            } else {
+                navigation.replace('ClienteNavigator');
+            }
+        } catch (error) {
             Toast.show({
                 type: 'error',
-                text1: 'Error',
-                text2: 'Usuario o contraseña incorrectos',
+                text1: 'Error al iniciar sesión',
+                text2:
+                    error instanceof Error
+                        ? error.message
+                        : 'No se pudo iniciar sesión',
                 position: 'bottom',
             });
-            return;
-        }
-
-        const { contraseña: _, ...usuarioSinContraseña } =
-            usuarioEncontrado;
-
-        dispatch(login(usuarioSinContraseña));
-
-        Toast.show({
-            type: 'success',
-            text1: 'Sesión iniciada',
-            text2: `Bienvenido, ${usuarioEncontrado.nombre}`,
-            position: 'bottom',
-        });
-
-        if (funcionId !== undefined) {
-            navigation.replace('Reserva', {
-                funcionId,
-                pasoInicial: 2,
-            });
-            return;
-        }
-
-        if (navigation.canGoBack()) {
-            navigation.goBack();
-        } else {
-            navigation.replace('ClienteNavigator');
+        } finally {
+            setCargando(false);
         }
     };
 
@@ -107,12 +129,12 @@ export default function LoginScreen({
 
                     <View style={commonStyles.inputView}>
                         <Text style={commonStyles.label}>
-                            Usuario
+                            Correo electrónico
                         </Text>
 
                         <TextInput
                             style={commonStyles.input}
-                            placeholder="Ingresa tu usuario"
+                            placeholder="Ingresa tu correo"
                             placeholderTextColor={
                                 colores.textoSecundario
                             }
@@ -120,6 +142,7 @@ export default function LoginScreen({
                             onChangeText={setUsuario}
                             autoCapitalize="none"
                             autoCorrect={false}
+                            keyboardType="email-address"
                         />
                     </View>
 
@@ -148,6 +171,7 @@ export default function LoginScreen({
                                 commonStyles.buttonWithIcon,
                             ]}
                             onPress={iniciarSesion}
+                            disabled={cargando}
                         >
                             <LogIn
                                 size={20}
@@ -155,7 +179,9 @@ export default function LoginScreen({
                             />
 
                             <Text style={commonStyles.buttonText}>
-                                Iniciar sesión
+                                {cargando
+                                    ? 'Iniciando sesión...'
+                                    : 'Iniciar sesión'}
                             </Text>
                         </TouchableOpacity>
 

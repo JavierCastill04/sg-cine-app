@@ -443,4 +443,53 @@ cinesDistancia: {
     fontWeight: '600',
 },
 
+    dashboardValor: {
+        fontSize: 32,
+        fontWeight: '700',
+        color: colores.enfasis,
+        marginBottom: espaciado.xs,
+    },
+
+    dashboardPelicula: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: colores.superficie,
+        marginBottom: espaciado.sm,
+    },
+
+    dashboardSeparacion: {
+        marginTop: espaciado.md,
+    },
+
+    dashboardCineFila: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: espaciado.sm,
+        gap: espaciado.sm,
+    },
+
+    dashboardCineNombre: {
+        ...tipografia.body,
+        color: colores.superficie,
+        flex: 1,
+    },
+
+    dashboardCineIngreso: {
+        ...tipografia.body,
+        color: colores.enfasis,
+        fontWeight: '700',
+    },
+
+    dashboardEstado: {
+        ...tipografia.body,
+        color: colores.superficie,
+        textAlign: 'center',
+        marginTop: espaciado.lg,
+    },
+
+    dashboardReintentar: {
+        marginTop: espaciado.lg,
+    },
+
 });

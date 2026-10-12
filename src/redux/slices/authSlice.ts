@@ -7,6 +7,7 @@ import type { AuthState } from "../../types/AuthState";
 const initialState: AuthState = {
     autenticado: false,
     usuario: null,
+    token: null,
     biometriaActiva: false,
     usuarioBiometria: null,
     accesoPersonalAutorizado: false,
@@ -17,19 +18,27 @@ const authSlice = createSlice({
     name: "auth",
     initialState,
     reducers: {
-        login: (state, action: PayloadAction<Usuario>) => {
-            state.versionSesion += 1;
-            state.autenticado = true;
-            state.usuario = action.payload;
-            state.accesoPersonalAutorizado = false;
-        },
+login: (
+    state,
+    action: PayloadAction<{
+        usuario: Usuario;
+        token: string | null;
+    }>
+) => {
+    state.versionSesion += 1;
+    state.autenticado = true;
+    state.usuario = action.payload.usuario;
+    state.token = action.payload.token;
+    state.accesoPersonalAutorizado = false;
+},
 
-        logout: state => {
-            state.versionSesion += 1;
-            state.autenticado = false;
-            state.usuario = null;
-            state.accesoPersonalAutorizado = false;
-        },
+      logout: state => {
+    state.versionSesion += 1;
+    state.autenticado = false;
+    state.usuario = null;
+    state.token = null;
+    state.accesoPersonalAutorizado = false;
+},
 
         activarBiometria: (
             state,

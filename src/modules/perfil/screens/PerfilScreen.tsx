@@ -7,7 +7,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
+import { establecerToken } from '../../../services/api';
 import {
     UserRound,
     LogIn,
@@ -33,8 +33,9 @@ export default function PerfilScreen() {
     const esPersonal = usuario?.rol === 'personal';
 
     const cerrarSesion = () => {
-        dispatch(logout());
-    };
+    establecerToken(null);
+    dispatch(logout());
+};
 
     return (
         <SafeAreaView style={commonStyles.containerScreen}>

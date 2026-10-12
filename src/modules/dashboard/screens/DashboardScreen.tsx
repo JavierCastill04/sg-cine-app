@@ -1,94 +1,168 @@
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, View, ScrollView } from 'react-native';
 
-import { useAppSelector } from '../../../redux/hooks';
+import { useCallback, useState } from 'react';
+import {
+    ActivityIndicator,
+    RefreshControl,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+
 import { commonStyles, colores } from '../../../theme';
+import { dashboardService } from '../../../services/dashboard.service';
+import type { DashboardResponse } from '../../../services/dashboard.service';
 
 export default function DashboardScreen() {
-    const peliculas = useAppSelector((state) => state.pelicula);
-    const funciones = useAppSelector((state) => state.funcion);
-    const salas = useAppSelector((state) => state.sala);
-    const ventas = useAppSelector((state) => state.venta);
+    const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
+    const [cargando, setCargando] = useState(true);
+    const [actualizando, setActualizando] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    // 1. Cantidad de películas
-    const cantidadPeliculas = peliculas.length;
-
-    // 2. Cantidad de funciones
-    const cantidadFunciones = funciones.length;
-
-    // 3. Boletos vendidos
-    const boletosVendidos = ventas.reduce(
-        (total, venta) => total + venta.cantidadBoletos,
-        0
-    );
-
-    // 4. Asientos disponibles
-    const asientosDisponibles = funciones.reduce(
-        (total, funcion) =>
-            total +
-            funcion.estadoAsientos.filter(
-                asiento => asiento.estado === 'disponible'
-            ).length,
-        0
-    );
-
-    // 5. Asientos ocupados
-    const asientosOcupados = funciones.reduce(
-        (total, funcion) =>
-            total +
-            funcion.estadoAsientos.filter(
-                asiento =>
-                    asiento.estado === 'reservado' ||
-                    asiento.estado === 'seleccionado'
-            ).length,
-        0
-    );
-
-    // 6. Ingresos
-    const ingresos = ventas.reduce(
-        (total, venta) => total + venta.total,
-        0
-    );
-
-    // 7. Película más reservada
-    const reservasPorPelicula: {
-        [peliculaId: number]: number;
-    } = {};
-
-    ventas.forEach(venta => {
-        const funcion = funciones.find(
-            funcion => funcion.id === venta.funcionId
-        );
-
-        if (funcion) {
-            reservasPorPelicula[funcion.peliculaId] =
-                (reservasPorPelicula[funcion.peliculaId] || 0) +
-                venta.cantidadBoletos;
+    const cargarDashboard = useCallback(async (mostrarCarga = true) => {
+        if (mostrarCarga) {
+            setCargando(true);
         }
-    });
 
-    let peliculaMasReservada = 'Ninguna';
-    let mayorCantidadReservas = 0;
+        setError(null);
 
-    Object.entries(reservasPorPelicula).forEach(
-        ([peliculaId, cantidad]) => {
-            if (cantidad > mayorCantidadReservas) {
-                const pelicula = peliculas.find(
-                    pelicula => pelicula.id === Number(peliculaId)
-                );
+        try {
+            const respuesta = await dashboardService.obtenerDashboard();
+            setDashboard(respuesta);
+        } catch (err) {
+            setDashboard(null);
 
-                if (pelicula) {
-                    peliculaMasReservada = pelicula.nombre;
-                    mayorCantidadReservas = cantidad;
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : 'No se pudieron cargar las estadísticas.'
+            );
+        } finally {
+            setCargando(false);
+        }
+    }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            let activo = true;
+
+            const cargar = async () => {
+                setCargando(true);
+                setError(null);
+
+                try {
+                    const respuesta = await dashboardService.obtenerDashboard();
+
+                    if (activo) {
+                        setDashboard(respuesta);
+                    }
+                } catch (err) {
+                    if (activo) {
+                        setDashboard(null);
+                        setError(
+                            err instanceof Error
+                                ? err.message
+                                : 'No se pudieron cargar las estadísticas.'
+                        );
+                    }
+                } finally {
+                    if (activo) {
+                        setCargando(false);
+                    }
                 }
-            }
-        }
+            };
+
+            cargar();
+
+            return () => {
+                activo = false;
+            };
+        }, [])
     );
+
+    const actualizarDashboard = async () => {
+        setActualizando(true);
+
+        try {
+            await cargarDashboard(false);
+        } finally {
+            setActualizando(false);
+        }
+    };
+
+    if (cargando && !dashboard) {
+        return (
+            <View style={commonStyles.containerScreen}>
+                <Text style={commonStyles.subtitle}>
+                    Resumen general del cine
+                </Text>
+
+                <ActivityIndicator
+                    size="large"
+                    color={colores.enfasis}
+                />
+
+                <Text style={commonStyles.dashboardEstado}>
+                    Cargando estadísticas...
+                </Text>
+            </View>
+        );
+    }
+
+    if (error && !dashboard) {
+        return (
+            <View style={commonStyles.containerScreen}>
+                <Text style={commonStyles.subtitle}>
+                    Resumen general del cine
+                </Text>
+
+                <Text style={commonStyles.dashboardEstado}>
+                    {error}
+                </Text>
+
+                <TouchableOpacity
+                    style={[
+                        commonStyles.button,
+                        commonStyles.dashboardReintentar,
+                    ]}
+                    onPress={() => cargarDashboard()}
+                >
+                    <Text style={commonStyles.buttonText}>
+                        Reintentar
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+
+    if (!dashboard) {
+        return null;
+    }
+
+    const {
+        peliculas,
+        funciones,
+        boletosVendidos,
+        asientos,
+        ingresosTotales,
+        ingresosPorCine,
+        peliculaMasReservada,
+    } = dashboard;
 
     return (
         <View style={commonStyles.containerScreen}>
-            <ScrollView showsVerticalScrollIndicator={false}>
-
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={actualizando}
+                        onRefresh={actualizarDashboard}
+                        tintColor={colores.enfasis}
+                        colors={[colores.enfasis]}
+                    />
+                }
+            >
                 <Text style={commonStyles.subtitle}>
                     Resumen general del cine
                 </Text>
@@ -99,8 +173,8 @@ export default function DashboardScreen() {
                         Películas
                     </Text>
 
-                    <Text style={styles.valor}>
-                        {cantidadPeliculas}
+                    <Text style={commonStyles.dashboardValor}>
+                        {peliculas.total}
                     </Text>
 
                     <Text style={commonStyles.text}>
@@ -114,12 +188,25 @@ export default function DashboardScreen() {
                         Funciones
                     </Text>
 
-                    <Text style={styles.valor}>
-                        {cantidadFunciones}
+                    <Text style={commonStyles.dashboardValor}>
+                        {funciones.total}
                     </Text>
 
                     <Text style={commonStyles.text}>
                         Funciones programadas
+                    </Text>
+
+                    <Text
+                        style={[
+                            commonStyles.text,
+                            commonStyles.dashboardSeparacion,
+                        ]}
+                    >
+                        Activas: {funciones.activas}
+                    </Text>
+
+                    <Text style={commonStyles.text}>
+                        Canceladas: {funciones.canceladas}
                     </Text>
                 </View>
 
@@ -129,12 +216,12 @@ export default function DashboardScreen() {
                         Boletos vendidos
                     </Text>
 
-                    <Text style={styles.valor}>
+                    <Text style={commonStyles.dashboardValor}>
                         {boletosVendidos}
                     </Text>
 
                     <Text style={commonStyles.text}>
-                        Boletos vendidos
+                        Total de boletos vendidos
                     </Text>
                 </View>
 
@@ -144,35 +231,49 @@ export default function DashboardScreen() {
                         Asientos
                     </Text>
 
-                    <Text style={styles.valor}>
-                        {asientosDisponibles}
+                    <Text style={commonStyles.dashboardValor}>
+                        {asientos.disponibles}
                     </Text>
 
                     <Text style={commonStyles.text}>
                         Asientos disponibles
                     </Text>
 
-                    <Text style={[styles.valor, { marginTop: 12 }]}>
-                        {asientosOcupados}
+                    <Text
+                        style={[
+                            commonStyles.dashboardValor,
+                            commonStyles.dashboardSeparacion,
+                        ]}
+                    >
+                        {asientos.ocupados}
                     </Text>
 
                     <Text style={commonStyles.text}>
                         Asientos ocupados
                     </Text>
+
+                    <Text
+                        style={[
+                            commonStyles.text,
+                            commonStyles.dashboardSeparacion,
+                        ]}
+                    >
+                        Capacidad total: {asientos.capacidadTotal}
+                    </Text>
                 </View>
 
-                {/* Ingresos */}
+                {/* Ingresos totales */}
                 <View style={commonStyles.card}>
                     <Text style={commonStyles.cardTitle}>
                         Ingresos
                     </Text>
 
-                    <Text style={styles.valor}>
-                        ${ingresos.toFixed(2)}
+                    <Text style={commonStyles.dashboardValor}>
+                        ${ingresosTotales.toFixed(2)}
                     </Text>
 
                     <Text style={commonStyles.text}>
-                        Ingresos por ventas
+                        Ingresos totales por ventas
                     </Text>
                 </View>
 
@@ -182,49 +283,45 @@ export default function DashboardScreen() {
                         Película más reservada
                     </Text>
 
-                    <Text style={styles.pelicula}>
-                        {peliculaMasReservada}
+                    <Text style={commonStyles.dashboardPelicula}>
+                        {peliculaMasReservada?.pelicula ?? 'Ninguna'}
                     </Text>
 
-                    {mayorCantidadReservas > 0 && (
+                    {peliculaMasReservada && (
                         <Text style={commonStyles.text}>
-                            {mayorCantidadReservas} boletos vendidos
+                            {peliculaMasReservada.boletosVendidos} boletos vendidos
                         </Text>
                     )}
                 </View>
 
-                {/* Información adicional */}
+                {/* Ingresos por cine */}
                 <View style={commonStyles.card}>
                     <Text style={commonStyles.cardTitle}>
-                        Salas
+                        Ingresos por cine
                     </Text>
 
-                    <Text style={styles.valor}>
-                        {salas.length}
-                    </Text>
+                    {ingresosPorCine.length === 0 ? (
+                        <Text style={commonStyles.text}>
+                            No hay ingresos registrados.
+                        </Text>
+                    ) : (
+                        ingresosPorCine.map((cine) => (
+                            <View
+                                key={cine.cineId}
+                                style={commonStyles.dashboardCineFila}
+                            >
+                                <Text style={commonStyles.dashboardCineNombre}>
+                                    {cine.cine}
+                                </Text>
 
-                    <Text style={commonStyles.text}>
-                        Salas registradas
-                    </Text>
+                                <Text style={commonStyles.dashboardCineIngreso}>
+                                    ${cine.ingresos.toFixed(2)}
+                                </Text>
+                            </View>
+                        ))
+                    )}
                 </View>
-
             </ScrollView>
         </View>
     );
 }
-
-const styles = {
-    valor: {
-        fontSize: 32,
-        fontWeight: '700' as const,
-        color: colores.enfasis,
-        marginBottom: 4,
-    },
-
-    pelicula: {
-        fontSize: 22,
-        fontWeight: '700' as const,
-        color: colores.superficie,
-        marginBottom: 8,
-    },
-};
